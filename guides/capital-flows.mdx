@@ -1,0 +1,129 @@
+---
+title: "Track Capital Flows and Stock Connect Data"
+sidebarTitle: "Capital Flows"
+description: "Monitor Stock Connect northbound and southbound flows, per-stock money flow by order size, and northbound and southbound holdings in AShareHub."
+---
+
+Capital-flow data reveals who is buying and selling the A-share market beyond what price alone can show. AShareHub surfaces three complementary views: aggregate Stock Connect flows between Hong Kong and the mainland (northbound and southbound), per-stock order-size decomposition that separates retail from institutional activity, and granular holdings disclosures for both northbound foreign investors and southbound mainland investors in Hong Kong-listed stocks. Together these datasets let you track foreign sentiment, identify accumulation patterns, and correlate cross-border flows with index moves.
+
+## Stock Connect Aggregate Flows (HSGT)
+
+`moneyflow_hsgt()` returns the daily aggregate net capital flows through the Shanghai–Hong Kong Stock Connect (HGT) and the Shenzhen–Hong Kong Stock Connect (GGT). Northbound money flows from Hong Kong into A-shares; southbound flows from the mainland into Hong Kong-listed stocks.
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_your_key")
+
+df = client.moneyflow_hsgt(
+    start_date="2024-01-01",
+    limit=250,
+)
+print(df[["trade_date", "north_money", "south_money",
+          "hgt_ss", "hgt_sz", "ggt_ss", "ggt_sz"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `north_money` | Total net northbound flow (HGT + GGT, CNY millions) |
+| `south_money` | Total net southbound flow (CNY millions) |
+| `hgt_ss` | Shanghai-leg northbound via HGT (沪股通) |
+| `hgt_sz` | Shenzhen-leg northbound via GGT (深股通) |
+| `ggt_ss` | Shanghai-leg southbound via GGT (港股通沪) |
+| `ggt_sz` | Shenzhen-leg southbound via GGT (港股通深) |
+
+**HGT** (沪港通) links the SSE and the HKEX; **GGT** (深港通) links the SZSE and the HKEX. Positive `north_money` means foreign investors are net buyers of A-shares on that day.
+
+## Per-Stock Money Flow
+
+`moneyflow()` breaks down each stock's daily turnover by order size: small (retail), medium, large, and extra-large (institutional). Net flows by order tier are a widely-used proxy for smart-money activity.
+
+```python
+df = client.moneyflow(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    limit=100,
+)
+print(df[["trade_date",
+          "buy_sm_vol", "buy_sm_amount",
+          "buy_md_vol", "buy_md_amount",
+          "buy_lg_vol", "buy_lg_amount",
+          "buy_elg_vol", "buy_elg_amount",
+          "net_mf_amount"]])
+```
+
+| Column | Description |
+|--------|-------------|
+| `buy_sm_vol` / `buy_sm_amount` | Small-order buy volume and amount |
+| `buy_md_vol` / `buy_md_amount` | Medium-order buys |
+| `buy_lg_vol` / `buy_lg_amount` | Large-order buys |
+| `buy_elg_vol` / `buy_elg_amount` | Extra-large-order buys (institutional proxy) |
+| `net_mf_amount` | Net money flow = total buys minus total sells (CNY) |
+
+Corresponding `sell_*` columns follow the same naming pattern. A persistently positive `net_mf_amount` driven by `buy_elg_amount` suggests institutional accumulation.
+
+## Northbound Holdings
+
+`northbound_holdings()` returns the end-of-day holdings that foreign investors hold in each A-share stock through the Stock Connect programme.
+
+```python
+df = client.northbound_holdings(
+    symbol="600519.SH",
+    start_date="2024-01-01",
+    limit=250,
+)
+print(df[["trade_date", "ts_code", "name", "vol", "ratio", "exchange"]])
+```
+
+| Column | Description |
+|--------|-------------|
+| `vol` | Shares held by northbound investors (lots) |
+| `ratio` | Holding as a percentage of total share capital (%) |
+| `exchange` | Which leg: `SH` (Shanghai) or `SZ` (Shenzhen) |
+
+Rising `ratio` over time indicates steady foreign accumulation of the stock.
+
+## Southbound Holdings
+
+`southbound_holdings()` returns mainland investor holdings of Hong Kong-listed stocks via the southbound leg of the Stock Connect.
+
+```python
+df = client.southbound_holdings(
+    symbol="00700.HK",
+    start_date="2024-01-01",
+    limit=250,
+)
+print(df.head())
+```
+
+Use this to see which Hong Kong stocks mainland investors are building positions in — often a leading indicator of A-share-listed peers in the same sector.
+
+## Chip Distribution
+
+`chip_distribution()` models the cost basis of current holders across percentile brackets, plus a `winner_rate` that shows what fraction of shareholders are currently profitable at today's price.
+
+```python
+df = client.chip_distribution(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    limit=100,
+)
+print(df[["trade_date", "cost_5pct", "cost_50pct", "cost_95pct",
+          "weight_avg", "winner_rate"]])
+```
+
+A `winner_rate` above 80 % means most holders are sitting on gains — often a precondition for distribution pressure. A `winner_rate` below 20 % can signal a deeply oversold base.
+
+<Tip>
+Combine `moneyflow_hsgt()` with `index_daily()` to measure the rolling correlation between northbound net flows and CSI 300 daily returns. Days with large northbound inflows have historically preceded positive short-term index returns.
+
+```python
+flows = client.moneyflow_hsgt(start_date="2024-01-01", limit=250)
+index = client.index_daily(symbol="000300.SH", start_date="2024-01-01", limit=250)
+import pandas as pd
+merged = flows.merge(index[["trade_date", "pct_chg"]], on="trade_date")
+print(merged[["trade_date", "north_money", "pct_chg"]].head())
+```
+</Tip>

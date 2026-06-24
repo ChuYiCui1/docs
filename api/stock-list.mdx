@@ -1,0 +1,128 @@
+---
+title: "stock_list — A-Share Stock Directory"
+sidebarTitle: "Stock List"
+description: "Retrieve the complete directory of listed Chinese A-share stocks with basic info including name, industry, exchange, market, and listing status."
+---
+
+The `stock_list()` method returns a paginated directory of every Chinese A-share stock listed on the Shanghai (SSE) and Shenzhen (SZSE) exchanges. Each row includes the stock's identity, exchange membership, market tier, industry classification, and listing status. Because the full universe spans several thousand securities, you should use `limit` and `offset` together to walk through the entire dataset in batches.
+
+```python
+df = client.stock_list(
+    symbol: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Filter results to a single stock by its suffixed code, e.g. `"000001.SZ"`. Omit to retrieve all stocks (paginated).
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request. Increase up to the server's page ceiling to reduce round trips when scanning the full list.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination. Increment by `limit` on each subsequent call to advance through the dataset.
+</ParamField>
+
+<Note>
+  This endpoint does **not** accept `start_date` or `end_date` parameters — it returns current and historical listing records simultaneously, distinguished by `list_status`.
+</Note>
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row corresponds to one stock. Field definitions follow the `StockBasic` model.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed Tushare-style stock code, e.g. `"600519.SH"` or `"000001.SZ"`.
+</ResponseField>
+
+<ResponseField name="symbol" type="str">
+  Bare numeric ticker without exchange suffix, e.g. `"600519"`.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Short Chinese stock name, e.g. `"贵州茅台"`.
+</ResponseField>
+
+<ResponseField name="area" type="str">
+  Province or region where the company is headquartered, e.g. `"贵州"`.
+</ResponseField>
+
+<ResponseField name="industry" type="str">
+  Broad industry label, e.g. `"白酒"`.
+</ResponseField>
+
+<ResponseField name="fullname" type="str">
+  Full legal company name in Chinese.
+</ResponseField>
+
+<ResponseField name="enname" type="str">
+  Full legal company name in English.
+</ResponseField>
+
+<ResponseField name="cnspell" type="str">
+  Pinyin abbreviation of the Chinese name, e.g. `"GZMT"`.
+</ResponseField>
+
+<ResponseField name="market" type="str">
+  Market tier. Common values: `"主板"` (Main Board), `"创业板"` (ChiNext), `"科创板"` (STAR Market), `"北交所"` (BSE).
+</ResponseField>
+
+<ResponseField name="exchange" type="str">
+  Exchange code: `"SSE"` (Shanghai) or `"SZSE"` (Shenzhen).
+</ResponseField>
+
+<ResponseField name="curr_type" type="str">
+  Trading currency code, typically `"CNY"`.
+</ResponseField>
+
+<ResponseField name="list_status" type="str">
+  Current listing status: `"L"` = listed, `"D"` = delisted, `"P"` = suspended.
+</ResponseField>
+
+<ResponseField name="list_date" type="date">
+  Date the stock was first listed on its exchange (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="delist_date" type="date">
+  Date the stock was delisted, if applicable. `null` for currently listed stocks.
+</ResponseField>
+
+<ResponseField name="is_hs" type="str">
+  Stock Connect eligibility: `"H"` = Shanghai–Hong Kong Connect, `"S"` = Shenzhen–Hong Kong Connect, `"N"` = not eligible.
+</ResponseField>
+
+## Example Usage
+
+The snippet below demonstrates how to page through the entire A-share universe using a `while` loop, collecting all results into a single DataFrame.
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+all_stocks = []
+offset = 0
+page_size = 500
+
+while True:
+    batch = client.stock_list(limit=page_size, offset=offset)
+    if batch.empty:
+        break
+    all_stocks.append(batch)
+    offset += page_size
+
+universe = pd.concat(all_stocks, ignore_index=True)
+print(f"Total stocks retrieved: {len(universe)}")
+
+# Filter to only currently listed stocks on SSE
+sse_listed = universe[
+    (universe["list_status"] == "L") & (universe["exchange"] == "SSE")
+]
+print(sse_listed[["ts_code", "name", "market", "industry"]].head(10))
+```

@@ -1,0 +1,91 @@
+---
+title: "northbound_holdings — Foreign Holdings via Stock Connect"
+sidebarTitle: "northbound_holdings"
+description: "Track daily northbound investor holdings of individual A-share stocks via Stock Connect, including volume held and percentage of float."
+---
+
+The `northbound_holdings` method returns the daily snapshot of shares held in individual A-share stocks by foreign investors routing through the northbound Stock Connect channels — either the Shanghai–Hong Kong (HGT, 沪港通) or Shenzhen–Hong Kong (GGT, 深港通) leg. Each row records the holding volume and the proportion of the stock's free float it represents on a given date, making it straightforward to track changes in foreign ownership over time.
+
+```python
+client.northbound_holdings(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `"600519.SH"` (Kweichow Moutai). Omit to retrieve holdings across all eligible A-share stocks for the specified date range.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Filters rows where `trade_date >= start_date`.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Filters rows where `trade_date <= end_date`.
+</ParamField>
+
+<ParamField query="limit" type="int" default={100}>
+  Maximum number of rows to return. Defaults to `100`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset. Increment by `limit` to retrieve subsequent pages.
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="trade_date" type="date">
+  The date of the holding snapshot (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="ts_code" type="str">
+  Stock code in suffixed format, e.g. `"600519.SH"`.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Chinese short name of the stock, e.g. `"贵州茅台"`.
+</ResponseField>
+
+<ResponseField name="exchange" type="str">
+  The Stock Connect channel through which this holding is recorded. Common values: `"SSE"` (Shanghai, via HGT) or `"SZSE"` (Shenzhen, via GGT).
+</ResponseField>
+
+<ResponseField name="vol" type="int">
+  Number of shares held by northbound investors on this date, in lots (手, where 1 lot = 100 shares).
+</ResponseField>
+
+<ResponseField name="ratio" type="float">
+  Northbound holdings as a percentage of the stock's free float (流通股比例), expressed as a percentage value (e.g. `4.85` means 4.85%).
+</ResponseField>
+
+<Note>
+  Holdings data is published by the Hong Kong Stock Exchange (HKEX) each evening after market close, typically with a one-day lag. The `vol` field is in **lots** (手), not individual shares — multiply by 100 to get share count.
+</Note>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Track foreign ownership of Kweichow Moutai throughout Q1 2024
+df = client.northbound_holdings(
+    symbol="600519.SH",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+)
+
+print(df[["trade_date", "vol", "ratio"]])
+
+# Find the date with peak foreign ownership ratio
+peak = df.loc[df["ratio"].idxmax()]
+print(f"Peak ratio: {peak['ratio']}% on {peak['trade_date']}")
+```

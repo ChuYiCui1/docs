@@ -1,0 +1,206 @@
+---
+title: "Fetch A-Share Market Data with AShareHub"
+sidebarTitle: "Market Data"
+description: "Retrieve daily OHLCV prices, valuations, technical indicators, limit-up/down lists, margin data, and block trades for Chinese A-shares."
+---
+
+AShareHub gives you a single, consistent interface for the full range of Chinese A-share market data — from raw OHLCV bars and valuation multiples to technical indicators, margin balances, block trades, and the daily Dragon & Tiger list. Every method returns a `pd.DataFrame`, so you can slot the results straight into your existing pandas or NumPy workflow without any conversion step.
+
+## Daily Price Data
+
+Use `market_daily()` to pull end-of-day OHLCV bars for any A-share listed on the SSE or SZSE. Narrow the results to a specific window with `start_date` and `end_date`, or page through longer histories with `limit` and `offset`.
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_your_key")
+
+df = client.market_daily(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-12-31",
+)
+print(df[["trade_date", "open", "high", "low", "close", "pre_close",
+          "change", "pct_chg", "vol", "amount"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `trade_date` | Trading date (`YYYY-MM-DD`) |
+| `open` | Opening price (CNY) |
+| `high` | Intraday high |
+| `low` | Intraday low |
+| `close` | Closing price |
+| `pre_close` | Previous closing price |
+| `change` | Absolute price change |
+| `pct_chg` | Percentage change (%) |
+| `vol` | Volume (lots) |
+| `amount` | Turnover (CNY thousands) |
+
+## Valuation Metrics
+
+`fundamentals()` returns daily market-cap and valuation ratios for any stock. Use this alongside price data to build screeners or track multiple expansion over time.
+
+```python
+df = client.fundamentals(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+)
+print(df[["trade_date", "pe", "pe_ttm", "pb", "ps_ttm",
+          "total_mv", "circ_mv", "turnover_rate"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `pe` | Price-to-earnings (static) |
+| `pe_ttm` | Price-to-earnings (trailing twelve months) |
+| `pb` | Price-to-book |
+| `ps_ttm` | Price-to-sales (TTM) |
+| `total_mv` | Total market cap (CNY thousands) |
+| `circ_mv` | Circulating (free-float) market cap |
+| `turnover_rate` | Turnover rate (%) |
+
+## Technical Indicators
+
+`technical_factors()` bundles the most common technical indicators — MACD, KDJ, RSI, Bollinger Bands, and CCI — together with backward-adjusted (`hfq`) and forward-adjusted (`qfq`) OHLC prices in a single call.
+
+```python
+df = client.technical_factors(
+    symbol="600519.SH",
+    start_date="2024-01-01",
+    limit=250,
+)
+print(df[["trade_date", "close_hfq", "macd_dif", "macd_dea", "macd",
+          "kdj_k", "kdj_d", "kdj_j",
+          "rsi_6", "rsi_12", "rsi_24",
+          "boll_upper", "boll_mid", "boll_lower", "cci"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `open_hfq` / `close_hfq` | Backward-adjusted open/close (后复权) |
+| `open_qfq` / `close_qfq` | Forward-adjusted open/close (前复权) |
+| `macd_dif` | MACD DIF line |
+| `macd_dea` | MACD DEA signal line |
+| `macd` | MACD histogram |
+| `kdj_k` / `kdj_d` / `kdj_j` | KDJ stochastic components |
+| `rsi_6` / `rsi_12` / `rsi_24` | RSI at 6, 12, and 24 periods |
+| `boll_upper` / `boll_mid` / `boll_lower` | Bollinger Band upper, mid, lower |
+| `cci` | Commodity Channel Index |
+
+The adjusted price columns (`open_hfq`, `high_hfq`, `low_hfq`, `close_hfq`, and their `qfq` equivalents) already incorporate the cumulative adjustment factor, so you can use them directly for return calculations without a separate multiplication step.
+
+## Adjusted Price Factor
+
+When you need to apply the adjustment factor yourself — for example, to back-fill a custom OHLCV series — use `adj_factor()` to retrieve the raw multiplier for each trading day.
+
+```python
+df = client.adj_factor(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    limit=250,
+)
+print(df[["trade_date", "adj_factor"]])
+```
+
+Multiply unadjusted close prices by `adj_factor` for backward-adjusted prices, or divide by `adj_factor` and re-base for forward-adjusted prices.
+
+## Limit-Up / Limit-Down Stocks
+
+`limit_list()` returns every stock that hit its daily price ceiling or floor. Pass `limit_type="U"` for limit-up stocks and `limit_type="D"` for limit-down stocks.
+
+<Tabs>
+  <Tab title="Limit-Up">
+    ```python
+    df = client.limit_list(
+        limit_type="U",
+        start_date="2024-06-01",
+        limit=100,
+    )
+    print(df[["trade_date", "ts_code", "name", "close", "pct_chg",
+              "first_time", "last_time", "open_times", "limit_times"]])
+    ```
+  </Tab>
+  <Tab title="Limit-Down">
+    ```python
+    df = client.limit_list(
+        limit_type="D",
+        start_date="2024-06-01",
+        limit=100,
+    )
+    print(df[["trade_date", "ts_code", "name", "close", "pct_chg",
+              "first_time", "last_time", "open_times"]])
+    ```
+  </Tab>
+</Tabs>
+
+Notable columns include `first_time` and `last_time` (the first and last times the limit price was hit), `open_times` (how many times the limit broke intraday), and `limit_times` (consecutive limit-up days).
+
+## Margin Trading
+
+`margin()` returns daily margin finance and securities-lending balances (融资融券) for each stock. Track changes in `rzye` (long financing balance) and `rqye` (short lending balance) to gauge leveraged sentiment.
+
+```python
+df = client.margin(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    limit=100,
+)
+print(df[["trade_date", "ts_code", "name",
+          "rzye", "rqye", "rzrqye"]])
+```
+
+| Column | Description |
+|--------|-------------|
+| `rzye` | Margin finance balance — long side (CNY) |
+| `rqye` | Securities lending balance — short side (CNY) |
+| `rzmre` | Margin buy amount for the day |
+| `rzrqye` | Combined margin balance (`rzye + rqye`) |
+
+## Block Trades
+
+`block_trade()` surfaces every off-exchange block transaction (大宗交易), including the price, volume, and the broker seats on each side.
+
+```python
+df = client.block_trade(
+    symbol="600519.SH",
+    start_date="2024-01-01",
+    limit=100,
+)
+print(df[["trade_date", "ts_code", "price", "vol", "amount",
+          "buyer", "seller"]])
+```
+
+## Dragon & Tiger List
+
+`top_list()` returns the daily Dragon & Tiger board (龙虎榜) — stocks with unusual price moves or turnover that triggered mandatory disclosure of the top five buying and selling seats.
+
+```python
+df = client.top_list(
+    start_date="2024-06-01",
+    limit=100,
+)
+print(df[["trade_date", "ts_code", "name", "close",
+          "pct_change", "turnover_rate", "l_buy", "l_sell"]])
+```
+
+For the full breakdown of which institutional seats were buying or selling, call `top_inst()` with the same `symbol` and date range:
+
+```python
+inst = client.top_inst(
+    symbol="000001.SZ",
+    start_date="2024-06-01",
+    limit=100,
+)
+print(inst)
+```
+
+<Tip>
+Pass `start_date` and `end_date` to every market-data call to narrow the result set. Tight date windows reduce data transfer, stay well within your daily API quota, and make pagination with `limit` and `offset` more predictable. For full-year histories, set `limit=250` (roughly one trading year) instead of the default 100.
+</Tip>

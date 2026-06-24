@@ -1,0 +1,95 @@
+---
+title: "moneyflow_hsgt — Stock Connect Capital Flows"
+sidebarTitle: "moneyflow_hsgt"
+description: "Retrieve daily Stock Connect aggregate capital flows between Hong Kong and mainland China, including HGT (Shanghai), GGT (Shenzhen), and net totals."
+---
+
+The `moneyflow_hsgt` method returns daily aggregate capital flow data for the Shanghai–Hong Kong Stock Connect (HGT, 沪港通) and the Shenzhen–Hong Kong Stock Connect (GGT, 深港通). Each row covers one trading day and breaks down net flows into the four channels — HGT buy (SS) and sell (SZ) legs and GGT equivalents — as well as aggregate northbound and southbound net figures. Because this is a market-wide aggregate, there is no `symbol` filter; use `start_date` and `end_date` to scope the date range you need.
+
+```python
+client.moneyflow_hsgt(
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format, e.g. `"2024-01-01"`. Filters rows where `trade_date >= start_date`.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format, e.g. `"2024-03-31"`. Filters rows where `trade_date <= end_date`.
+</ParamField>
+
+<ParamField query="limit" type="int" default={100}>
+  Maximum number of rows to return. Defaults to `100`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset. Use together with `limit` to page through large result sets.
+</ParamField>
+
+<Note>
+  This endpoint has **no `symbol` parameter**. It returns market-wide aggregates only. To analyse flows for a specific stock, use [`northbound_holdings`](/api/northbound-holdings) instead.
+</Note>
+
+## Response Fields
+
+Each row in the returned DataFrame corresponds to one calendar day.
+
+<ResponseField name="trade_date" type="date">
+  The trading date for this flow record (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="ggt_ss" type="float">
+  GGT (Shen-Gang Tong / Shenzhen–HK Connect) net buy amount via the Shanghai leg, in CNY 100 millions (亿元).
+</ResponseField>
+
+<ResponseField name="ggt_sz" type="float">
+  GGT net buy amount via the Shenzhen leg, in CNY 100 millions.
+</ResponseField>
+
+<ResponseField name="hgt_ss" type="float">
+  HGT (Hu-Gang Tong / Shanghai–HK Connect) net buy amount via the Shanghai leg, in CNY 100 millions.
+</ResponseField>
+
+<ResponseField name="hgt_sz" type="float">
+  HGT net buy amount via the Shenzhen leg, in CNY 100 millions.
+</ResponseField>
+
+<ResponseField name="north_money" type="float">
+  Total **northbound** net capital inflow for the day (mainland-bound), in CNY 100 millions. A positive value means net buying of A-shares by Hong Kong/foreign investors.
+</ResponseField>
+
+<ResponseField name="south_money" type="float">
+  Total **southbound** net capital inflow for the day (HK-bound), in CNY 100 millions. A positive value means net buying of HK stocks by mainland investors.
+</ResponseField>
+
+<Tip>
+  **HGT** (沪港通, Hu-Gang Tong) connects the Shanghai Stock Exchange with Hong Kong. **GGT** (深港通, Shen-Gang Tong) connects the Shenzhen Stock Exchange with Hong Kong. `north_money` = HGT + GGT combined northbound net; `south_money` = the equivalent southbound aggregate.
+</Tip>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch the last 20 trading days of Stock Connect flows
+df = client.moneyflow_hsgt(
+    start_date="2024-01-01",
+    end_date="2024-01-31",
+    limit=20,
+)
+
+print(df[["trade_date", "north_money", "south_money"]])
+
+# Find the 5 days with the largest northbound inflow
+top_inflow = df.nlargest(5, "north_money")
+print(top_inflow)
+```

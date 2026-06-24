@@ -1,0 +1,183 @@
+---
+title: "income — Income Statement Data for A-Shares"
+sidebarTitle: "income"
+description: "Access quarterly and annual income statement data including revenue, operating profit, net income, EPS, EBIT, and EBITDA for A-share companies."
+---
+
+The `income` method returns standardised income statement (利润表) data for A-share companies filed with the CSRC. Each row corresponds to one reporting period — quarterly (Q1, H1, Q3, or annual) — and covers the full P&L waterfall from total revenue down to net income attributable to parent shareholders, along with EPS metrics and EBIT/EBITDA. The `report_type` field distinguishes between initial filings, amendments, and adjustments; `update_flag` signals whether a row is the most recent revision.
+
+```python
+client.income(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `"600519.SH"`. Omit to query across multiple companies.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter rows where the reporting period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter rows where the reporting period end date is on or before this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="limit" type="int" default={20}>
+  Maximum number of rows to return. Defaults to `20`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset.
+</ParamField>
+
+## Response Fields
+
+### Identifiers & Report Metadata
+
+<ResponseField name="ts_code" type="str">
+  Stock code in suffixed format, e.g. `"600519.SH"`.
+</ResponseField>
+
+<ResponseField name="ann_date" type="date | None">
+  Date the report was publicly announced (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="f_ann_date" type="date | None">
+  Date of the formal/official announcement filing (`YYYY-MM-DD`). May differ from `ann_date` for amended filings.
+</ResponseField>
+
+<ResponseField name="end_date" type="date">
+  Reporting period end date — e.g. `"2023-12-31"` for the full-year report.
+</ResponseField>
+
+<ResponseField name="report_type" type="str">
+  Report type code. Common values: `"1"` = regular filing, `"2"` = correction, `"3"` = adjustment.
+</ResponseField>
+
+<ResponseField name="comp_type" type="str">
+  Company type code that determines the applicable accounting template. Common values: `"1"` = general industrial/commercial, `"2"` = bank, `"3"` = securities firm, `"4"` = insurance.
+</ResponseField>
+
+<ResponseField name="update_flag" type="str">
+  Indicates whether this row is the latest revision: `"0"` = superseded, `"1"` = latest.
+</ResponseField>
+
+### Per-Share Metrics
+
+<ResponseField name="basic_eps" type="float">
+  Basic earnings per share (基本每股收益), in CNY.
+</ResponseField>
+
+<ResponseField name="diluted_eps" type="float">
+  Diluted earnings per share (稀释每股收益), in CNY.
+</ResponseField>
+
+### Revenue
+
+<ResponseField name="total_revenue" type="float">
+  Total revenue (营业总收入), in CNY.
+</ResponseField>
+
+<ResponseField name="revenue" type="float">
+  Operating revenue (营业收入) — may differ from `total_revenue` for companies with other income streams, in CNY.
+</ResponseField>
+
+### Cost & Expense Items
+
+<ResponseField name="total_cogs" type="float">
+  Total cost of goods sold / operating costs (营业总成本), in CNY.
+</ResponseField>
+
+<ResponseField name="oper_cost" type="float">
+  Operating cost of revenue (营业成本), in CNY.
+</ResponseField>
+
+<ResponseField name="sell_exp" type="float">
+  Selling expenses (销售费用), in CNY.
+</ResponseField>
+
+<ResponseField name="admin_exp" type="float">
+  General and administrative expenses (管理费用), in CNY.
+</ResponseField>
+
+<ResponseField name="fin_exp" type="float">
+  Finance expenses / net interest expense (财务费用), in CNY.
+</ResponseField>
+
+<ResponseField name="rd_exp" type="float">
+  Research and development expenses (研发费用), in CNY.
+</ResponseField>
+
+### Profit Items
+
+<ResponseField name="operate_profit" type="float">
+  Operating profit (营业利润), in CNY.
+</ResponseField>
+
+<ResponseField name="non_oper_income" type="float">
+  Non-operating income (营业外收入), in CNY.
+</ResponseField>
+
+<ResponseField name="non_oper_exp" type="float">
+  Non-operating expenses (营业外支出), in CNY.
+</ResponseField>
+
+<ResponseField name="total_profit" type="float">
+  Total profit before tax (利润总额), in CNY.
+</ResponseField>
+
+<ResponseField name="income_tax" type="float">
+  Income tax expense (所得税费用), in CNY.
+</ResponseField>
+
+<ResponseField name="n_income" type="float">
+  Net income (净利润) — consolidated, including minority interest, in CNY.
+</ResponseField>
+
+<ResponseField name="n_income_attr_p" type="float">
+  Net income attributable to parent company shareholders (归属于母公司股东的净利润), in CNY. This is the most commonly cited bottom-line figure.
+</ResponseField>
+
+<ResponseField name="ebit" type="float">
+  Earnings before interest and taxes (息税前利润/EBIT), in CNY.
+</ResponseField>
+
+<ResponseField name="ebitda" type="float">
+  Earnings before interest, taxes, depreciation, and amortisation (EBITDA), in CNY.
+</ResponseField>
+
+<Note>
+  All monetary fields are in **CNY (yuan)**. When comparing across companies in different size brackets, normalise by `total_revenue` or total assets from [`balance_sheet`](/api/balance-sheet).
+</Note>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Annual income statements for Kweichow Moutai — last 5 years
+df = client.income(
+    symbol="600519.SH",
+    start_date="2019-01-01",
+    end_date="2023-12-31",
+    limit=20,
+)
+
+# Filter to latest revision of annual reports only
+annual = df[
+    (df["end_date"].str.endswith("12-31")) &
+    (df["update_flag"] == "1")
+]
+
+print(annual[["end_date", "revenue", "operate_profit", "n_income_attr_p", "basic_eps"]])
+```

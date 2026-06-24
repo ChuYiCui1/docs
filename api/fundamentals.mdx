@@ -1,0 +1,144 @@
+---
+title: "fundamentals — Daily Valuation Metrics for A-Shares"
+sidebarTitle: "fundamentals"
+description: "Retrieve daily valuation metrics including PE ratio, PB ratio, turnover rate, and market cap for any Chinese A-share stock."
+---
+
+`fundamentals` returns daily valuation and market statistics for Chinese A-share stocks, sourced from exchange disclosure data. Each row includes price-earnings ratios (both static and trailing twelve months), price-to-book, price-to-sales, dividend yield, share counts broken down by float and free-float, and both total and circulating market capitalisation. This endpoint is the go-to source for screening stocks by valuation or building factor models.
+
+```python
+df = client.fundamentals(
+    symbol="600519.SH",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ` or `600519.SH`. Omit to query across all symbols.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `Fundamentals` model and represents one stock on one trading day.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `600519.SH`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="close" type="float">
+  Closing price for the day, in CNY.
+</ResponseField>
+
+<ResponseField name="turnover_rate" type="float">
+  Daily turnover rate based on total share count, as a percentage.
+</ResponseField>
+
+<ResponseField name="turnover_rate_f" type="float">
+  Daily turnover rate based on free-float share count, as a percentage.
+</ResponseField>
+
+<ResponseField name="volume_ratio" type="float">
+  Volume ratio: today's volume divided by the 5-day average volume.
+</ResponseField>
+
+<ResponseField name="pe" type="float">
+  Static price-to-earnings ratio (市盈率) based on the most recent annual EPS.
+</ResponseField>
+
+<ResponseField name="pe_ttm" type="float">
+  Trailing twelve-month price-to-earnings ratio (市盈率TTM).
+</ResponseField>
+
+<ResponseField name="pb" type="float">
+  Price-to-book ratio (市净率).
+</ResponseField>
+
+<ResponseField name="ps" type="float">
+  Static price-to-sales ratio (市销率).
+</ResponseField>
+
+<ResponseField name="ps_ttm" type="float">
+  Trailing twelve-month price-to-sales ratio (市销率TTM).
+</ResponseField>
+
+<ResponseField name="dv_ratio" type="float">
+  Dividend yield (股息率) based on most recent annual dividend, as a percentage.
+</ResponseField>
+
+<ResponseField name="dv_ttm" type="float">
+  Trailing twelve-month dividend yield, as a percentage.
+</ResponseField>
+
+<ResponseField name="total_share" type="float">
+  Total shares outstanding, in 万股 (10,000-share units).
+</ResponseField>
+
+<ResponseField name="float_share" type="float">
+  Tradable (float) share count, in 万股.
+</ResponseField>
+
+<ResponseField name="free_share" type="float">
+  Free-float share count (excluding strategic holdings), in 万股.
+</ResponseField>
+
+<ResponseField name="total_mv" type="float">
+  Total market capitalisation in 万元 (10,000 CNY).
+</ResponseField>
+
+<ResponseField name="circ_mv" type="float">
+  Circulating (float) market capitalisation in 万元.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch the latest 60 days of valuation data for BYD
+df = client.fundamentals(symbol="002594.SZ", limit=60)
+print(df[["trade_date", "pe_ttm", "pb", "total_mv", "circ_mv"]])
+
+# Screen for low-PE stocks on a given date (cross-sectional)
+df_all = client.fundamentals(
+    start_date="2024-06-03",
+    end_date="2024-06-03",
+    limit=500,
+)
+low_pe = df_all[df_all["pe_ttm"] < 10].sort_values("pe_ttm")
+print(low_pe[["ts_code", "pe_ttm", "pb", "total_mv"]])
+```
+
+<Note>
+  `pe`, `pe_ttm`, `pb`, and `ps` may be `NaN` for loss-making companies or in periods where the denominator is negative or unavailable.
+</Note>
+
+<Tip>
+  Combine `circ_mv` with `turnover_rate_f` to calculate the free-float adjusted daily turnover in absolute CNY terms: `turnover_cny = circ_mv * turnover_rate_f / 100`.
+</Tip>

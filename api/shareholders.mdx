@@ -1,0 +1,95 @@
+---
+title: "shareholders — Shareholder Count (股东户数)"
+sidebarTitle: "shareholders"
+description: "Retrieve disclosed shareholder count for Chinese A-share companies, typically updated quarterly or semi-annually alongside financial report filings."
+---
+
+`shareholders` returns the publicly disclosed total shareholder count (股东户数) for Chinese A-share companies. Listed companies are required to disclose this figure periodically — typically at each quarterly, semi-annual, or annual reporting date — making it a useful gauge of retail participation and share concentration. A declining shareholder count alongside rising prices often signals share concentration (筹码集中化), which some market participants interpret as a bullish structural change.
+
+```python
+df = client.shareholders(
+    symbol="000001.SZ",
+    start_date="2020-01-01",
+    end_date="2024-12-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to query across all companies.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter by `end_date` (report period end) starting from this date, in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter by `end_date` (report period end) up to this date, in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `ShareholderNumber` model and represents one disclosed shareholder-count observation.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="ann_date" type="date">
+  Announcement date when the figure was publicly disclosed. May be `null` if not separately reported.
+</ResponseField>
+
+<ResponseField name="end_date" type="date">
+  Report period end date — the date as of which the shareholder count was measured, e.g. `2024-03-31` for the Q1 report.
+</ResponseField>
+
+<ResponseField name="holder_num" type="int">
+  Total number of registered shareholders (股东户数) as of `end_date`.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Shareholder count history for Ping An Bank
+df = client.shareholders(symbol="000001.SZ", limit=20)
+print(df[["end_date", "ann_date", "holder_num"]])
+
+# Quarter-over-quarter change in shareholder count
+df = df.sort_values("end_date")
+df["holder_change"] = df["holder_num"].diff()
+df["holder_pct_change"] = df["holder_num"].pct_change() * 100
+print(df[["end_date", "holder_num", "holder_change", "holder_pct_change"]])
+
+# Cross-sectional: all disclosures around Q1 2024 report season
+df_all = client.shareholders(
+    start_date="2024-03-31",
+    end_date="2024-04-30",
+    limit=500,
+)
+# Stocks where shareholder count fell (concentration rising)
+concentrating = df_all[df_all["holder_num"] < df_all["holder_num"].median()]
+print(concentrating.sort_values("holder_num").head(20))
+```
+
+<Note>
+  Disclosure frequency varies by company and reporting period. Most A-share companies report shareholder counts at **four points per year** (Q1, Q2, Q3, and annual), but some only disclose semi-annually. `ann_date` may lag `end_date` by several weeks.
+</Note>
+
+<Tip>
+  Combine this endpoint with [`fundamentals`](/api/fundamentals) to normalise shareholder counts by circulating market capitalisation and estimate the average position size per shareholder.
+</Tip>

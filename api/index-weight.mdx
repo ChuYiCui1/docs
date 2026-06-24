@@ -1,0 +1,101 @@
+---
+title: "index_weight — Index Constituent Weights"
+sidebarTitle: "Index Weight"
+description: "Retrieve the constituent stocks and their weights for major Chinese market indices including CSI 300 and SZSE Component at any historical date."
+---
+
+The `index_weight()` method returns the constituent stocks of a Chinese equity index along with each stock's weight in that index as of a given trading date. You can use this data to replicate index holdings, measure factor exposure relative to a benchmark, or track historical rebalancing events. The `symbol` parameter maps internally to the `index_code` field in the response, so the same suffixed-code convention applies.
+
+```python
+df = client.index_weight(
+    symbol: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Suffixed index code identifying the index whose constituents you want to retrieve, e.g. `"000300.SH"` for CSI 300 or `"399001.SZ"` for SZSE Component. Stored as `index_code` in the response.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request. Set to `300` or higher when fetching a full index snapshot (CSI 300 has 300 constituents).
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination.
+</ParamField>
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row represents one constituent stock's weight in the index on a given trading date. Field definitions follow the `IndexWeight` model.
+
+<ResponseField name="index_code" type="str">
+  Suffixed code of the parent index, e.g. `"000300.SH"`. This is the value passed via the `symbol` parameter.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  The date as of which this constituent weight applies (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="con_code" type="str">
+  Suffixed stock code of the constituent, e.g. `"600519.SH"`.
+</ResponseField>
+
+<ResponseField name="con_name" type="str">
+  Short Chinese name of the constituent stock, e.g. `"贵州茅台"`.
+</ResponseField>
+
+<ResponseField name="weight" type="float">
+  The constituent's percentage weight in the index, expressed as a value between 0 and 100.
+</ResponseField>
+
+## Example Usage
+
+<Note>
+  The `symbol` parameter you pass maps to `index_code` in the API response. You query *by* index code, and the response echoes it back as `index_code`.
+</Note>
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+# Retrieve all 300 CSI 300 constituents for the latest available date
+csi300_weights = client.index_weight(
+    symbol="000300.SH",
+    limit=300,
+)
+print(f"Constituents returned: {len(csi300_weights)}")
+print(csi300_weights[["con_code", "con_name", "weight"]].head(10))
+
+# Verify weights sum to ~100%
+total_weight = csi300_weights["weight"].sum()
+print(f"Total weight: {total_weight:.2f}%")
+
+# Get historical weights for the SZSE Component around a rebalancing date
+szse_hist = client.index_weight(
+    symbol="399001.SZ",
+    start_date="2024-06-01",
+    end_date="2024-06-30",
+    limit=500,
+)
+# Identify the most recent snapshot date
+latest_date = szse_hist["trade_date"].max()
+snapshot = szse_hist[szse_hist["trade_date"] == latest_date]
+top10 = snapshot.nlargest(10, "weight")[["con_code", "con_name", "weight"]]
+print(top10)
+```

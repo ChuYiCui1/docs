@@ -1,0 +1,189 @@
+---
+title: "technical_factors — MACD, KDJ, RSI, BOLL, and CCI"
+sidebarTitle: "technical_factors"
+description: "Get technical indicators and adjusted prices for A-share stocks, including MACD, KDJ, RSI, Bollinger Bands, CCI, and forward/backward adjusted prices."
+---
+
+`technical_factors` delivers a rich set of pre-computed technical indicators alongside backward-adjusted (后复权, `hfq`) and forward-adjusted (前复权, `qfq`) OHLC prices for Chinese A-share stocks. Each row covers one trading day and bundles common momentum and trend indicators — MACD, KDJ stochastics, RSI at three lookback windows, Bollinger Bands, and CCI — with the corresponding adjustment factor, saving you from computing them yourself. For access to 200+ additional indicator variants with full bfq/qfq/hfq series, use the companion method `technical_factors_pro`.
+
+```python
+df = client.technical_factors(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to query across all symbols.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `StkFactor` model and represents one stock on one trading day.
+
+### Adjusted Prices — Backward (后复权, HFQ)
+
+<ResponseField name="open_hfq" type="float">
+  Backward-adjusted opening price.
+</ResponseField>
+
+<ResponseField name="close_hfq" type="float">
+  Backward-adjusted closing price.
+</ResponseField>
+
+<ResponseField name="high_hfq" type="float">
+  Backward-adjusted intraday high.
+</ResponseField>
+
+<ResponseField name="low_hfq" type="float">
+  Backward-adjusted intraday low.
+</ResponseField>
+
+<ResponseField name="pre_close_hfq" type="float">
+  Backward-adjusted prior-day close.
+</ResponseField>
+
+### Adjusted Prices — Forward (前复权, QFQ)
+
+<ResponseField name="open_qfq" type="float">
+  Forward-adjusted opening price.
+</ResponseField>
+
+<ResponseField name="close_qfq" type="float">
+  Forward-adjusted closing price.
+</ResponseField>
+
+<ResponseField name="high_qfq" type="float">
+  Forward-adjusted intraday high.
+</ResponseField>
+
+<ResponseField name="low_qfq" type="float">
+  Forward-adjusted intraday low.
+</ResponseField>
+
+<ResponseField name="pre_close_qfq" type="float">
+  Forward-adjusted prior-day close.
+</ResponseField>
+
+### Adjustment Factor
+
+<ResponseField name="adj_factor" type="float">
+  Raw adjustment factor for the day. See [`adj_factor`](/api/adj-factor) for details on how to apply it.
+</ResponseField>
+
+### MACD (Moving Average Convergence Divergence)
+
+<ResponseField name="macd_dif" type="float">
+  MACD DIF line (12-period EMA minus 26-period EMA).
+</ResponseField>
+
+<ResponseField name="macd_dea" type="float">
+  MACD DEA signal line (9-period EMA of DIF).
+</ResponseField>
+
+<ResponseField name="macd" type="float">
+  MACD histogram (柱状图), equal to `2 × (DIF − DEA)`.
+</ResponseField>
+
+### KDJ Stochastics
+
+<ResponseField name="kdj_k" type="float">
+  KDJ K value (fast stochastic, default 9-period).
+</ResponseField>
+
+<ResponseField name="kdj_d" type="float">
+  KDJ D value (slow stochastic, 3-period SMA of K).
+</ResponseField>
+
+<ResponseField name="kdj_j" type="float">
+  KDJ J value (`3K − 2D`). Values above 100 or below 0 signal overbought/oversold conditions.
+</ResponseField>
+
+### RSI (Relative Strength Index)
+
+<ResponseField name="rsi_6" type="float">
+  RSI with a 6-period lookback. More sensitive to short-term swings.
+</ResponseField>
+
+<ResponseField name="rsi_12" type="float">
+  RSI with a 12-period lookback.
+</ResponseField>
+
+<ResponseField name="rsi_24" type="float">
+  RSI with a 24-period lookback. More stable, suited to medium-term analysis.
+</ResponseField>
+
+### Bollinger Bands (BOLL)
+
+<ResponseField name="boll_upper" type="float">
+  Upper Bollinger Band (20-period SMA + 2 standard deviations).
+</ResponseField>
+
+<ResponseField name="boll_mid" type="float">
+  Middle Bollinger Band (20-period simple moving average).
+</ResponseField>
+
+<ResponseField name="boll_lower" type="float">
+  Lower Bollinger Band (20-period SMA − 2 standard deviations).
+</ResponseField>
+
+### CCI (Commodity Channel Index)
+
+<ResponseField name="cci" type="float">
+  Commodity Channel Index (14-period default). Values beyond ±100 indicate potential trend strength.
+</ResponseField>
+
+### Identifiers
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch technical factors for Ping An Bank over one quarter
+df = client.technical_factors(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+)
+print(df[["trade_date", "close_qfq", "macd", "rsi_6", "kdj_k", "boll_upper", "boll_lower"]])
+
+# Use the pro endpoint for 200+ indicators
+df_pro = client.technical_factors_pro(symbol="000001.SZ", limit=100)
+print(df_pro.columns.tolist())
+```
+
+<Tip>
+  Use `close_qfq` (forward-adjusted close) for chart rendering so that historical prices visually account for splits and dividends. Use `close_hfq` when computing returns or factor signals to avoid look-ahead bias.
+</Tip>

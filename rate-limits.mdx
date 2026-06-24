@@ -1,0 +1,87 @@
+---
+title: "Rate Limits and Request Quotas in AShareHub"
+sidebarTitle: "Rate Limits"
+description: "Understand AShareHub daily request quotas, HTTP 429 errors, and best practices for staying within your plan's limits when building data pipelines."
+---
+
+Every AShareHub plan enforces a daily request quota that resets at midnight UTC. Understanding how that quota works — and how to write SDK code that handles it gracefully — helps you build reliable data pipelines without unexpected interruptions. This page explains the limits for each plan, what happens when you exceed them, and practical techniques for keeping your usage efficient.
+
+## Daily Limits by Plan
+
+Each API key is associated with exactly one plan, and all requests made with that key count toward the same daily quota.
+
+| Plan | Price | Daily Request Limit |
+|------|-------|---------------------|
+| Free | $0 | 100 requests/day |
+| Pro | $49/month | 10,000 requests/day |
+| Business | $99/month | 50,000 requests/day |
+
+See [Plans](/plans) for a full feature comparison across all tiers.
+
+## What Happens When You Exceed the Limit
+
+When you exhaust your daily quota, the AShareHub API returns an **HTTP 429 Too Many Requests** response. The SDK surfaces this as an `httpx.HTTPStatusError` with `status_code` set to `429`. Your application will not receive any data for that request.
+
+Your quota resets automatically at **midnight UTC**. You do not need to contact support or take any action — subsequent requests after the reset will succeed normally.
+
+### Detecting and Handling a 429 Error
+
+Wrap your SDK calls in a `try/except` block so your application can respond gracefully when the quota is reached:
+
+```python
+import httpx
+import time
+
+try:
+    df = client.market_daily(symbol="000001.SZ")
+except httpx.HTTPStatusError as e:
+    if e.response.status_code == 429:
+        print("Daily quota reached — resets at midnight UTC")
+```
+
+<Warning>
+  A 429 response means your daily quota is fully exhausted — retrying the same request immediately will not succeed. Wait until after midnight UTC for the quota to reset, or upgrade your plan to continue making requests today.
+</Warning>
+
+## Best Practices for Staying Within Your Limits
+
+Applying a few simple patterns lets you accomplish more with fewer API requests, keeping you comfortably within your plan's daily quota.
+
+**Narrow queries with date ranges.** Pass `start_date` and `end_date` to every method that accepts them. Fetching only the date window you actually need avoids pulling redundant historical rows, which is especially important on the Free plan.
+
+```python
+# Good — only fetches the data you need
+df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01", end_date="2024-03-31")
+
+# Avoid — returns the full available history in one call when you may only need recent data
+df = client.market_daily(symbol="000001.SZ")
+```
+
+**Cache results locally.** Once you have fetched historical data, save it to disk with pandas so you do not need to re-fetch it on the next run.
+
+```python
+# Save to Parquet (recommended — smaller files, preserves dtypes)
+df.to_parquet("market_daily_000001.parquet", index=False)
+
+# Or save to CSV
+df.to_csv("market_daily_000001.csv", index=False)
+
+# Load on subsequent runs — no API request needed
+df = pd.read_parquet("market_daily_000001.parquet")
+```
+
+**Batch symbol requests in `realtime()`.** The `realtime()` method accepts up to 200 symbols in a single call. Fetching quotes for 100 symbols in one batched call costs one request, whereas calling `realtime()` once per symbol would cost 100 requests.
+
+```python
+# Good — one request for 100 symbols
+symbols = ["000001.SZ", "000002.SZ", "600036.SH"]  # extend up to 200
+df = client.realtime(symbols=symbols)
+```
+
+**Avoid unnecessary polling.** Real-time data is valuable only when your use case actually requires it. If you are building a daily analytics job, schedule it to run once per day rather than polling `realtime()` on a tight loop — every call counts against your daily quota.
+
+**Prefer date-range filters over pagination.** Use `start_date`/`end_date` to scope your queries whenever possible. The `limit`/`offset` pagination parameters are useful for exploring large datasets, but repeatedly paginating through records you have already seen wastes quota. A well-targeted date range is almost always more efficient.
+
+<Tip>
+  Use the Free plan while you are building and testing your application. Its 100-request daily limit is plenty for iterating on your code and validating your data pipeline logic. Once you are ready to move to production — or you find yourself waiting for the midnight reset — upgrade to Pro or Business at [asharehub.com/console](https://asharehub.com/console).
+</Tip>

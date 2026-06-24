@@ -1,0 +1,101 @@
+---
+title: "adj_factor — Daily Price Adjustment Factors"
+sidebarTitle: "adj_factor"
+description: "Retrieve daily adjustment factors used to compute backward or forward-adjusted historical prices for Chinese A-share stocks after corporate actions."
+---
+
+`adj_factor` returns the cumulative price-adjustment multiplier for each trading day of a Chinese A-share stock. Adjustment factors change whenever a corporate action — such as a cash dividend, stock split, rights issue, or bonus share distribution — alters the stock's comparable price series. You can use this endpoint to reconstruct either backward-adjusted (后复权) or forward-adjusted (前复权) price series from the raw OHLCV data returned by [`market_daily`](/api/market-daily).
+
+```python
+df = client.adj_factor(
+    symbol="000001.SZ",
+    start_date="2020-01-01",
+    end_date="2024-12-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to retrieve factors across all symbols.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `AdjFactor` model and represents the adjustment factor effective on one trading day for one stock.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="adj_factor" type="float">
+  Cumulative adjustment factor for the day. A value of `1.0` means no adjustments have been applied relative to the base date. The factor increases over time as dividends and other distributions accumulate.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch adjustment factors for the full history of ICBC
+adj = client.adj_factor(symbol="601398.SH", limit=5000)
+daily = client.market_daily(symbol="601398.SH", limit=5000)
+
+# Merge on trade_date
+merged = daily.merge(adj[["trade_date", "adj_factor"]], on="trade_date")
+
+# Compute backward-adjusted (后复权) close
+latest_factor = merged["adj_factor"].iloc[0]          # most recent factor
+merged["close_hfq"] = merged["close"] * merged["adj_factor"] / latest_factor
+
+# Compute forward-adjusted (前复权) close
+earliest_factor = merged["adj_factor"].iloc[-1]       # earliest factor
+merged["close_qfq"] = merged["close"] * merged["adj_factor"] / earliest_factor
+
+print(merged[["trade_date", "close", "close_hfq", "close_qfq"]].head(10))
+```
+
+<Note>
+  To compute a **backward-adjusted** price series (后复权), use the formula:
+
+  ```
+  adjusted_close = close × adj_factor / latest_adj_factor
+  ```
+
+  To compute a **forward-adjusted** price series (前复权), divide by the earliest (base) factor instead:
+
+  ```
+  adjusted_close = close × adj_factor / earliest_adj_factor
+  ```
+
+  The `technical_factors` endpoint returns pre-computed `_hfq` and `_qfq` series if you prefer not to calculate these yourself.
+</Note>
+
+<Tip>
+  Adjustment factors are delivered in **reverse chronological order** by default (newest first). Sort ascending by `trade_date` before applying the formula to avoid off-by-one errors.
+</Tip>

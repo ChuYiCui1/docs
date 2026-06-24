@@ -1,0 +1,124 @@
+---
+title: "news_flash — Real-Time Chinese Financial News"
+sidebarTitle: "News Flash"
+description: "Fetch real-time Chinese financial news flashes from major feeds including CLS (财联社), Jin10 (金十), and Sina (新浪). Content is in Chinese."
+---
+
+The `news_flash()` method streams headline-level financial news from three major Chinese financial news feeds: CLS (财联社), Jin10 (金十数据), and Sina Finance (新浪财经). Results are ordered newest-first and include the publication timestamp, importance score, topic tags, source URL, and the full Chinese-language news content. Because each feed has its own editorial focus and refresh cadence, you query one source per call using the required `source` parameter.
+
+```python
+df = client.news_flash(
+    source: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    importance: Optional[int] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="source" type="str" required>
+  The news feed to query. This parameter is **required**. Valid values:
+  - `"cls"` — 财联社 (Cailian Press / CLS), a leading institutional financial wire
+  - `"jin10"` — 金十数据, a real-time macro and markets data feed
+  - `"sina"` — 新浪财经, Sina Finance's news service
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter news published on or after this date (`YYYY-MM-DD`). Applied against `publish_time`.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter news published on or before this date (`YYYY-MM-DD`). Applied against `publish_time`.
+</ParamField>
+
+<ParamField query="importance" type="int" optional>
+  Minimum importance threshold filter. Only returns items where `importance >= ` this value. Higher values correspond to more market-moving or widely flagged stories. Typical values are `0` and `1`.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination.
+</ParamField>
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row is one news item, ordered newest-first. Field definitions follow the `NewsFlash` model.
+
+<ResponseField name="source" type="str">
+  The feed that published this item: `"cls"`, `"jin10"`, or `"sina"`.
+</ResponseField>
+
+<ResponseField name="publish_time" type="datetime">
+  Full timestamp when the item was published, including time-of-day (`YYYY-MM-DD HH:MM:SS`). Useful for intraday event-driven analysis.
+</ResponseField>
+
+<ResponseField name="content_cn" type="str">
+  The full text of the news flash in Simplified Chinese.
+</ResponseField>
+
+<ResponseField name="tags" type="str">
+  Comma-separated topic keywords in Chinese assigned by the editorial system, e.g. `"美联储,降息,人民币"`. Useful for filtering news by theme or building event signals.
+</ResponseField>
+
+<ResponseField name="importance" type="int">
+  Editorial importance rating for the item. Higher values indicate greater perceived market significance. Items with `importance >= 1` are generally considered headline-level news by the source.
+</ResponseField>
+
+<ResponseField name="url" type="str">
+  Canonical URL of the original article or flash on the source's website.
+</ResponseField>
+
+## Example Usage
+
+<Note>
+  `content_cn` is in Simplified Chinese. `tags` are comma-separated Chinese topic keywords. If you need to process content programmatically, consider using a Chinese NLP library such as `jieba` for tokenisation.
+</Note>
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+# Get the latest important news from CLS (财联社)
+df = client.news_flash(source="cls", importance=1, limit=20)
+print(df[["publish_time", "importance", "content_cn"]].head())
+
+# Get Jin10 news for a specific date range
+df_jun = client.news_flash(
+    source="jin10",
+    start_date="2024-06-01",
+    end_date="2024-06-30",
+    limit=100,
+)
+print(f"Jin10 items in June 2024: {len(df_jun)}")
+
+# Filter by tag keyword — find Fed-related items
+fed_news = df_jun[df_jun["tags"].str.contains("美联储", na=False)]
+print(fed_news[["publish_time", "tags", "content_cn"]].head(5))
+
+# Page through a large date range using offset
+all_items = []
+offset = 0
+while True:
+    batch = client.news_flash(
+        source="sina",
+        start_date="2024-01-01",
+        end_date="2024-01-31",
+        limit=100,
+        offset=offset,
+    )
+    if batch.empty:
+        break
+    all_items.append(batch)
+    offset += 100
+
+sina_jan = pd.concat(all_items, ignore_index=True)
+print(f"Total Sina items in January 2024: {len(sina_jan)}")
+```

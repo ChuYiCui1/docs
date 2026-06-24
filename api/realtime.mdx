@@ -1,0 +1,122 @@
+---
+title: "realtime — Live Intraday Quote Snapshots"
+sidebarTitle: "realtime"
+description: "Fetch real-time intraday quote snapshots for up to 200 A-share symbols per call. Returns current price, OHLC, pct_chg, volume, and trade timestamp."
+---
+
+`realtime` returns the latest intraday quote snapshot for one or more Chinese A-share stocks. You can pass a single symbol, a comma-separated basket of up to 200 codes, or omit `symbol` entirely to page through the whole market. Each record includes the current trading price, intraday OHLC, prior-day close, cumulative volume, turnover amount, and the precise timestamp of the most recent trade. This is the primary endpoint for building live watchlists, alert systems, or any application that needs sub-minute price data.
+
+```python
+df = client.realtime(
+    symbol="000001.SZ",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  A single suffixed stock code (e.g. `"000001.SZ"`) or a comma-separated list of up to 200 codes (e.g. `"600519.SH,000858.SZ,601318.SH"`). Omit to retrieve snapshots for all tradable stocks, paged by `limit` and `offset`.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of snapshots to return per call. Maximum effective value when passing a basket is 200.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip. Useful when paging through the full market without a `symbol` filter.
+</ParamField>
+
+<Note>
+  `realtime` does **not** accept `start_date` or `end_date` parameters — it always returns the latest available snapshot. For historical intraday data, use [`market_daily`](/api/market-daily).
+</Note>
+
+## Response Fields
+
+Each row maps to the `RealtimeQuote` model and represents one stock's latest quote at the time of the API call.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Short Chinese name of the security, e.g. `平安银行`.
+</ResponseField>
+
+<ResponseField name="price" type="float">
+  Current trading price (最新价), in CNY.
+</ResponseField>
+
+<ResponseField name="open" type="float">
+  Today's opening price, in CNY.
+</ResponseField>
+
+<ResponseField name="high" type="float">
+  Today's intraday high price, in CNY.
+</ResponseField>
+
+<ResponseField name="low" type="float">
+  Today's intraday low price, in CNY.
+</ResponseField>
+
+<ResponseField name="pre_close" type="float">
+  Previous trading day's closing price, in CNY.
+</ResponseField>
+
+<ResponseField name="pct_chg" type="float">
+  Percentage change from `pre_close` to `price`, expressed as a percentage (e.g. `1.52` means +1.52%).
+</ResponseField>
+
+<ResponseField name="volume" type="float">
+  Cumulative trading volume since market open, in lots (手).
+</ResponseField>
+
+<ResponseField name="amount" type="float">
+  Cumulative turnover amount since market open, in thousands of CNY (千元).
+</ResponseField>
+
+<ResponseField name="trade_time" type="datetime">
+  Timestamp of the most recent matched trade, in China Standard Time (UTC+8). Format: `YYYY-MM-DD HH:MM:SS`.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Snapshot for a single stock
+df = client.realtime(symbol="600519.SH")
+print(df[["ts_code", "name", "price", "pct_chg", "trade_time"]])
+
+# Basket quote for multiple stocks at once
+basket = "600519.SH,000858.SZ,601318.SH,000001.SZ"
+df_basket = client.realtime(symbol=basket)
+print(df_basket[["ts_code", "name", "price", "pct_chg", "volume"]])
+
+# Page through all tradable stocks
+import pandas as pd
+frames = []
+offset = 0
+while True:
+    chunk = client.realtime(limit=200, offset=offset)
+    if chunk.empty:
+        break
+    frames.append(chunk)
+    offset += 200
+
+market = pd.concat(frames, ignore_index=True)
+# Top 10 gainers right now
+top_gainers = market.nlargest(10, "pct_chg")[["ts_code", "name", "price", "pct_chg"]]
+print(top_gainers)
+```
+
+<Note>
+  `trade_time` is refreshed continuously during trading hours (**09:30–15:00 CST, Monday–Friday**). Outside of trading hours the field reflects the closing auction timestamp from the most recent session.
+</Note>
+
+<Tip>
+  For the lowest latency, request only the symbols you need using a comma-separated `symbol` string rather than paging through all stocks.
+</Tip>

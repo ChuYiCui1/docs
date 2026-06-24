@@ -1,0 +1,211 @@
+---
+title: "balance_sheet — Balance Sheet for A-Share Companies"
+sidebarTitle: "balance_sheet"
+description: "Retrieve quarterly and annual balance sheet data including total assets, liabilities, equity, current assets, and key financial position items."
+---
+
+The `balance_sheet` method returns standardised balance sheet (资产负债表) data for A-share companies. Each row corresponds to one reporting period and provides the full financial position snapshot — from current assets such as cash, receivables, and inventories through to non-current assets, then current and non-current liabilities, and finally shareholder equity split into parent and minority interest. The `report_type` and `update_flag` fields let you identify the latest revision of each filing.
+
+```python
+client.balance_sheet(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `"000858.SZ"` (Wuliangye). Omit to query across multiple companies.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter rows where the period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter rows where the period end date is on or before this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="limit" type="int" default={20}>
+  Maximum number of rows to return. Defaults to `20`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset.
+</ParamField>
+
+## Response Fields
+
+### Identifiers & Report Metadata
+
+<ResponseField name="ts_code" type="str">
+  Stock code in suffixed format, e.g. `"000858.SZ"`.
+</ResponseField>
+
+<ResponseField name="ann_date" type="date | None">
+  Public announcement date of this filing (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="f_ann_date" type="date | None">
+  Formal filing announcement date (`YYYY-MM-DD`). May differ from `ann_date` for amended reports.
+</ResponseField>
+
+<ResponseField name="end_date" type="date">
+  Period end date, e.g. `"2023-12-31"` for the annual balance sheet.
+</ResponseField>
+
+<ResponseField name="report_type" type="str">
+  Report type code: `"1"` = regular, `"2"` = correction, `"3"` = adjustment.
+</ResponseField>
+
+<ResponseField name="comp_type" type="str">
+  Company type for accounting template: `"1"` = general, `"2"` = bank, `"3"` = securities, `"4"` = insurance.
+</ResponseField>
+
+<ResponseField name="update_flag" type="str">
+  `"1"` if this is the latest revision for the period; `"0"` if superseded.
+</ResponseField>
+
+### Current Assets
+
+<ResponseField name="total_cur_assets" type="float">
+  Total current assets (流动资产合计), in CNY.
+</ResponseField>
+
+<ResponseField name="money_cap" type="float">
+  Cash and cash equivalents (货币资金), in CNY.
+</ResponseField>
+
+<ResponseField name="notes_receiv" type="float">
+  Notes receivable (应收票据), in CNY.
+</ResponseField>
+
+<ResponseField name="accounts_receiv" type="float">
+  Accounts receivable (应收账款), in CNY.
+</ResponseField>
+
+<ResponseField name="inventories" type="float">
+  Inventories (存货), in CNY.
+</ResponseField>
+
+### Non-Current Assets
+
+<ResponseField name="total_nca" type="float">
+  Total non-current assets (非流动资产合计), in CNY.
+</ResponseField>
+
+<ResponseField name="fa_avail_for_sale" type="float">
+  Financial assets available for sale (可供出售金融资产), in CNY.
+</ResponseField>
+
+<ResponseField name="lt_eqt_invest" type="float">
+  Long-term equity investments (长期股权投资), in CNY.
+</ResponseField>
+
+<ResponseField name="fix_assets" type="float">
+  Net fixed assets / property, plant and equipment (固定资产), in CNY.
+</ResponseField>
+
+<ResponseField name="cip" type="float">
+  Construction in progress (在建工程), in CNY.
+</ResponseField>
+
+<ResponseField name="intan_assets" type="float">
+  Intangible assets (无形资产), in CNY.
+</ResponseField>
+
+<ResponseField name="goodwill" type="float">
+  Goodwill (商誉), in CNY.
+</ResponseField>
+
+<ResponseField name="total_assets" type="float">
+  Total assets (资产总计), in CNY.
+</ResponseField>
+
+### Current Liabilities
+
+<ResponseField name="total_cur_liab" type="float">
+  Total current liabilities (流动负债合计), in CNY.
+</ResponseField>
+
+<ResponseField name="st_borr" type="float">
+  Short-term borrowings (短期借款), in CNY.
+</ResponseField>
+
+<ResponseField name="notes_payable" type="float">
+  Notes payable (应付票据), in CNY.
+</ResponseField>
+
+<ResponseField name="acct_payable" type="float">
+  Accounts payable (应付账款), in CNY.
+</ResponseField>
+
+### Non-Current Liabilities
+
+<ResponseField name="total_ncl" type="float">
+  Total non-current liabilities (非流动负债合计), in CNY.
+</ResponseField>
+
+<ResponseField name="lt_borr" type="float">
+  Long-term borrowings (长期借款), in CNY.
+</ResponseField>
+
+<ResponseField name="bond_payable" type="float">
+  Bonds payable (应付债券), in CNY.
+</ResponseField>
+
+<ResponseField name="total_liab" type="float">
+  Total liabilities (负债合计), in CNY.
+</ResponseField>
+
+### Equity
+
+<ResponseField name="total_hldr_eqy_exc_min_int" type="float">
+  Total equity attributable to parent shareholders, excluding minority interest (归属于母公司股东权益合计), in CNY.
+</ResponseField>
+
+<ResponseField name="total_hldr_eqy_inc_min_int" type="float">
+  Total equity including minority interest (股东权益合计), in CNY.
+</ResponseField>
+
+<ResponseField name="minority_int" type="float">
+  Minority interest / non-controlling interest (少数股东权益), in CNY.
+</ResponseField>
+
+<Tip>
+  To compute **net debt**, use `(st_borr + lt_borr + bond_payable) - money_cap`. Combine with `ebitda` from [`income`](/api/income) to calculate the Net Debt / EBITDA leverage ratio.
+</Tip>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Annual balance sheets for BYD (002594.SZ) — last 5 years
+df = client.balance_sheet(
+    symbol="002594.SZ",
+    start_date="2019-01-01",
+    end_date="2023-12-31",
+    limit=20,
+)
+
+# Latest revision of annual reports
+annual = df[
+    (df["end_date"].str.endswith("12-31")) &
+    (df["update_flag"] == "1")
+]
+
+# Net debt trend
+annual = annual.copy()
+annual["net_debt"] = (
+    annual["st_borr"] + annual["lt_borr"] + annual["bond_payable"]
+) - annual["money_cap"]
+
+print(annual[["end_date", "total_assets", "total_liab", "total_hldr_eqy_exc_min_int", "net_debt"]])
+```

@@ -1,0 +1,115 @@
+---
+title: "top_list — Dragon & Tiger List (龙虎榜)"
+sidebarTitle: "top_list"
+description: "Retrieve the Dragon & Tiger list of unusually active stocks, including turnover, seat buy/sell amounts, and price change data for each session."
+---
+
+`top_list` returns the daily Dragon & Tiger list (龙虎榜), which the Shanghai and Shenzhen exchanges publish after each session to disclose stocks that attracted unusual trading activity — typically those with large single-day price moves, extreme turnover, or three consecutive limit-up/limit-down closes. Each row captures the stock's closing price, percentage change, turnover rate, total session amount, and the aggregate buy and sell amounts from the prominent seats that appeared on the list. For a breakdown of individual institutional seats, use the companion method `top_inst`.
+
+```python
+df = client.top_list(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to retrieve all Dragon & Tiger entries.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `TopList` model and represents one stock's Dragon & Tiger entry on one trading day.
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Short Chinese name of the security.
+</ResponseField>
+
+<ResponseField name="close" type="float">
+  Closing price for the session, in CNY.
+</ResponseField>
+
+<ResponseField name="pct_change" type="float">
+  Percentage price change for the session (e.g. `9.98` means +9.98%).
+</ResponseField>
+
+<ResponseField name="turnover_rate" type="float">
+  Session turnover rate as a percentage of float shares.
+</ResponseField>
+
+<ResponseField name="amount" type="float">
+  Total trading turnover for the entire stock during the session, in thousands of CNY (千元).
+</ResponseField>
+
+<ResponseField name="l_sell" type="float">
+  Total sell amount from the seats appearing on the Dragon & Tiger list, in thousands of CNY.
+</ResponseField>
+
+<ResponseField name="l_buy" type="float">
+  Total buy amount from the seats appearing on the Dragon & Tiger list, in thousands of CNY.
+</ResponseField>
+
+<ResponseField name="l_amount" type="float">
+  Net Dragon & Tiger seat amount (`l_buy − l_sell`), in thousands of CNY. Positive values indicate net institutional buying from listed seats.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Dragon & Tiger entries for a date range
+df = client.top_list(
+    start_date="2024-03-01",
+    end_date="2024-03-31",
+    limit=200,
+)
+print(df[["trade_date", "ts_code", "name", "pct_change", "l_buy", "l_sell", "l_amount"]])
+
+# Stocks with strong net institutional buying from listed seats
+strong_buy = df[df["l_amount"] > 0].nlargest(10, "l_amount")
+print(strong_buy[["trade_date", "ts_code", "name", "pct_change", "l_amount"]])
+
+# Drill into seat-level detail for a specific stock
+df_inst = client.top_inst(symbol="000001.SZ", limit=50)
+print(df_inst)
+```
+
+<Note>
+  A stock appears on the Dragon & Tiger list if it meets one of several official criteria on that day: a single-day price move of ±15% or more, three consecutive limit-up or limit-down closes, or a turnover rate above a specified threshold. Not every stock with a large move qualifies.
+</Note>
+
+<Tip>
+  `l_amount` (net seat buy/sell) covers only the trades by the **top-5 seats** disclosed by the exchange. A positive `l_amount` alongside high `turnover_rate` can indicate concentrated institutional accumulation.
+</Tip>

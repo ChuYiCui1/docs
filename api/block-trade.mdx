@@ -1,0 +1,108 @@
+---
+title: "block_trade — Block Trade (大宗交易) Data"
+sidebarTitle: "block_trade"
+description: "Access daily block trade records for Chinese A-shares, including price, volume, trade amount, and the identities of buyer and seller seats."
+---
+
+`block_trade` returns records from the Chinese A-share block trading system (大宗交易平台), where large institutional orders — typically 200,000 shares or more, or ≥ CNY 2 million in value — are negotiated and executed off the central order book. Each record includes the agreed transaction price, volume, total consideration, and the brokerage seat names of both the buying and selling parties. Block trade data is closely watched for signs of institutional accumulation or distribution at significant price levels.
+
+```python
+df = client.block_trade(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to retrieve block trades across all stocks.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `BlockTrade` model and represents a single block trade transaction.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code of the traded security, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Date the block trade was executed, in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="price" type="float">
+  Negotiated transaction price, in CNY. May differ from the prevailing market price.
+</ResponseField>
+
+<ResponseField name="vol" type="float">
+  Number of shares traded in the block, in lots (手, 100 shares per lot).
+</ResponseField>
+
+<ResponseField name="amount" type="float">
+  Total transaction value (`price × vol × 100`), in thousands of CNY (千元).
+</ResponseField>
+
+<ResponseField name="buyer" type="str">
+  Name of the brokerage seat acting as the buyer (买方营业部).
+</ResponseField>
+
+<ResponseField name="seller" type="str">
+  Name of the brokerage seat acting as the seller (卖方营业部).
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Block trades for China Vanke over Q1 2024
+df = client.block_trade(
+    symbol="000002.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+)
+print(df[["trade_date", "price", "vol", "amount", "buyer", "seller"]])
+
+# Largest block trades across the whole market on a single date
+df_all = client.block_trade(
+    start_date="2024-06-03",
+    end_date="2024-06-03",
+    limit=200,
+)
+largest = df_all.nlargest(10, "amount")[["ts_code", "price", "vol", "amount", "buyer", "seller"]]
+print(largest)
+
+# Find all trades involving a specific brokerage seat as buyer
+citic_buys = df_all[df_all["buyer"].str.contains("中信", na=False)]
+print(citic_buys)
+```
+
+<Note>
+  Block trade prices are negotiated directly between counterparties and are **not** constrained by the daily ±10% price limit. Transactions priced significantly above or below the prevailing market price can indicate unlocking of restricted shares (限售股) or other structural transfers.
+</Note>
+
+<Tip>
+  A block trade executed at a **discount to market price** often signals a large holder selling down a position. Trades at a **premium** can indicate a buyer with strong conviction or a related-party restructuring.
+</Tip>

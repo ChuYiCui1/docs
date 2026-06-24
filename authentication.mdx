@@ -1,0 +1,127 @@
+---
+title: "Authenticate with the AShareHub API"
+sidebarTitle: "Authentication"
+description: "AShareHub uses API key authentication. Learn how to get your key, pass it in requests, and handle authentication errors."
+---
+
+AShareHub uses API key authentication for every request. When you initialize the SDK client, you provide your key once and the client automatically attaches it to all outgoing requests as an `X-API-Key` header. There are no OAuth flows, token exchanges, or session cookies — just a single key that identifies your account and enforces your plan's rate limits.
+
+## Getting Your API Key
+
+Register for a free AShareHub account and generate your key in three steps:
+
+<Steps>
+  <Step title="Visit the registration page">
+    Go to [asharehub.com/console/register](https://asharehub.com/console/register) in your browser.
+  </Step>
+  <Step title="Create your account">
+    Sign up with your email address and set a password. No credit card is required for the free tier.
+  </Step>
+  <Step title="Generate your key in the dashboard">
+    After logging in, navigate to the **API Keys** section of your dashboard and click **Generate New Key**. Your key is displayed once — copy it and store it securely before closing the page.
+  </Step>
+</Steps>
+
+<Note>
+  All AShareHub API keys begin with the prefix `ash_`, for example `ash_1a2b3c4d5e6f...`. If your key does not match this format, it was not issued by AShareHub.
+</Note>
+
+## Using Your API Key
+
+### Initializing the SDK
+
+Pass your API key to the `AShareHub` constructor. The client stores the key and injects it into every request automatically:
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_your_key_here")
+```
+
+### What the SDK sends
+
+Behind the scenes, every HTTP request the client makes includes the following header:
+
+```http
+X-API-Key: ash_your_key_here
+```
+
+You do not need to set this header manually when using the Python SDK. It is only relevant if you call the REST API directly with `httpx`, `requests`, or `curl`.
+
+### Storing your key safely with environment variables
+
+<Warning>
+  Never hard-code your API key as a string literal in source files. If you commit it to a repository — public or private — you risk exposing it to anyone who can read that code. Treat your API key like a password.
+</Warning>
+
+Store your key in an environment variable and read it at runtime:
+
+```python
+import os
+from asharehub import AShareHub
+
+api_key = os.getenv("ASHAREHUB_API_KEY")
+if not api_key:
+    raise RuntimeError("ASHAREHUB_API_KEY environment variable is not set")
+
+client = AShareHub(api_key=api_key)
+```
+
+Set the environment variable in your shell before running your script:
+
+```bash
+export ASHAREHUB_API_KEY="ash_your_key_here"
+python your_script.py
+```
+
+For deployed applications, inject the variable through your platform's secrets manager (AWS Secrets Manager, GCP Secret Manager, GitHub Actions secrets, etc.) rather than hard-coding it in configuration files.
+
+## Authentication Errors
+
+The AShareHub API returns standard HTTP status codes when authentication fails. The SDK raises `httpx.HTTPStatusError` for any non-2xx response, so you can catch specific codes and respond appropriately.
+
+### HTTP 401 — Invalid or missing API key
+
+A `401` response means the `X-API-Key` header was absent, malformed, or does not match any active key in the system. Check that you are passing the correct key and that it has not been deleted from the dashboard.
+
+### HTTP 429 — Rate limit exceeded
+
+A `429` response means your account has exhausted its daily request quota. The free tier allows 100 requests per day. See the [rate limits](/rate-limits) page for details on plan limits and reset windows.
+
+### Error handling example
+
+```python
+import os
+import httpx
+from asharehub import AShareHub
+
+client = AShareHub(api_key=os.getenv("ASHAREHUB_API_KEY"))
+
+try:
+    df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+    print(df.head())
+except httpx.HTTPStatusError as e:
+    status = e.response.status_code
+    if status == 401:
+        print("Authentication failed: check that your API key is correct and active.")
+    elif status == 429:
+        print("Rate limit exceeded: you have used all requests in the current window.")
+    else:
+        print(f"Request failed with HTTP {status}: {e}")
+finally:
+    client.close()
+```
+
+## Key Security Tips
+
+<Tip>
+  **Store keys in environment variables or a secrets manager.** Never write your API key directly into `.py` files, `.env` files committed to a repository, Jupyter notebooks, or configuration files checked into version control.
+</Tip>
+
+<Tip>
+  **Never commit your key to version control.** Add `.env` to your `.gitignore` file and audit your commit history before pushing to a shared or public repository. Tools like `git-secrets` or `gitleaks` can scan automatically for accidental key exposure.
+</Tip>
+
+<Tip>
+  **Rotate immediately if compromised.** If you suspect your key has been exposed, go to the API Keys section of your dashboard, revoke the old key, and generate a new one. Update your environment variables or secrets manager with the new key — the old key will stop working immediately after revocation.
+</Tip>

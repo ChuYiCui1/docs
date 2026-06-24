@@ -1,47 +1,126 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get started with AShareHub in 5 minutes"
+sidebarTitle: "Quickstart"
+description: "Install the AShareHub Python SDK, authenticate with your API key, and fetch your first A-Share market data in under 5 minutes."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+AShareHub gets you from zero to a fully populated `pd.DataFrame` of Chinese A-Share data in just a few lines of Python. Follow the steps below to install the SDK, connect your API key, and run your first queries.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+
+  <Step title="Get your API key">
+    Every request to the AShareHub API requires an API key. Visit [asharehub.com/console/register](https://asharehub.com/console/register) to create a free account and generate your key from the dashboard.
+
+    The free tier includes **100 API calls per day** — enough to explore all endpoints and prototype your integration before upgrading.
+
+    <Tip>
+      Your API key always starts with `ash_`. Keep it somewhere safe; you'll need it in the next step.
+    </Tip>
+  </Step>
+
+  <Step title="Install the SDK">
+    Install AShareHub from PyPI using pip:
 
     ```bash
-    npm install your-package
+    pip install asharehub
     ```
-  </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+    **Requirements:** Python 3.10 or later, with `pandas` installed. The package automatically pulls in `httpx` and `pandas` as dependencies, so a fresh install is all you need.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
+  <Step title="Initialize the client">
+    Import `AShareHub` and create a client instance with your API key:
+
+    ```python
+    from asharehub import AShareHub
+
+    client = AShareHub(api_key="ash_your_key_here")
     ```
+
+    <Warning>
+      Never hard-code your API key directly in source files you plan to share or commit to version control. Use an environment variable instead — see the [Authentication guide](/authentication) for the recommended pattern.
+    </Warning>
   </Step>
+
+  <Step title="Fetch daily market data">
+    Call `client.market_daily()` to retrieve OHLC price data for any listed A-share. Pass a `symbol` in suffixed format (exchange suffix `.SZ` for Shenzhen, `.SH` for Shanghai), along with optional `start_date` and `end_date` strings in `YYYY-MM-DD` format:
+
+    ```python
+    df = client.market_daily(
+        symbol="000001.SZ",
+        start_date="2024-01-01",
+        end_date="2024-12-31",
+    )
+
+    print(df.columns.tolist())
+    # ['symbol', 'trade_date', 'open', 'high', 'low', 'close', 'pre_close',
+    #  'change', 'pct_chg', 'vol', 'amount']
+
+    print(df[["trade_date", "open", "high", "low", "close", "vol"]].head())
+    ```
+
+    Every method in the SDK returns a `pd.DataFrame`, so you can immediately chain pandas operations — filtering, resampling, plotting — without any intermediate parsing.
+  </Step>
+
+  <Step title="Close the client">
+    When you're done making requests, close the underlying HTTP connection:
+
+    ```python
+    client.close()
+    ```
+
+    This releases the connection pool managed by `httpx`. For scripts and notebooks where the client lives for the duration of the process, this step is optional but good practice.
+  </Step>
+
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Using the Context Manager
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+For code that creates and disposes of a client in a single block, use AShareHub as a context manager. The connection closes automatically when the `with` block exits — even if an exception occurs:
+
+```python
+from asharehub import AShareHub
+
+with AShareHub(api_key="ash_your_key_here") as client:
+    df = client.market_daily(
+        symbol="000001.SZ",
+        start_date="2024-01-01",
+        end_date="2024-12-31",
+    )
+    print(df.head())
+# HTTP connection is closed here automatically
+```
+
+## Fetching Real-Time Quotes
+
+Use `client.realtime()` to get the latest intraday snapshot for one or more securities. Pass a single symbol or a comma-separated list of up to 200 symbols:
+
+```python
+with AShareHub(api_key="ash_your_key_here") as client:
+    df = client.realtime(symbol="600519.SH,000001.SZ")
+
+    print(df[["symbol", "price", "pct_chg", "vol", "trade_time"]])
+```
+
+Real-time data includes current price, OHLC, previous close, percentage change, cumulative volume, and the exchange-reported quote timestamp. The endpoint refreshes continuously during trading hours.
+
+<Note>
+  All SDK methods return an empty `pd.DataFrame` (where `df.empty == True`) when the API finds no records matching your query — for example, a date range that falls entirely on non-trading days. Always check `df.empty` before downstream processing to avoid errors on empty results.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Symbol Format" icon="tag" href="/concepts/symbol-format">
+    Learn the suffixed symbol convention used across all endpoints.
+  </Card>
+  <Card title="Market Data Guide" icon="chart-candlestick" href="/guides/market-data">
+    Deep-dive into OHLC, real-time quotes, technical factors, and more.
+  </Card>
+  <Card title="Financials Guide" icon="file-invoice-dollar" href="/guides/financials">
+    Pull income statements, balance sheets, and earnings forecasts.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/market-daily">
+    Full parameter and response schema for every endpoint.
+  </Card>
+</CardGroup>

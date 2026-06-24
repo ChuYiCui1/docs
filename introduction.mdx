@@ -1,0 +1,63 @@
+---
+title: "AShareHub: Institutional A-Share Data for Python"
+sidebarTitle: "Introduction"
+description: "AShareHub is a Python SDK for Chinese A-Share market data. Access 38+ endpoints covering prices, financials, flows, and news — all as pandas DataFrames."
+---
+
+AShareHub is an institutional-grade Python SDK that gives you direct, programmatic access to Chinese A-Share market data. Whether you're building a quantitative strategy, conducting fundamental research, or tracking Stock Connect flows, AShareHub delivers structured data as `pd.DataFrame` objects — the same convention Tushare users already know — so you can start analyzing immediately without writing a single parser.
+
+## Key Features
+
+- **38+ data endpoints** spanning market prices, financial statements, capital flows, real-time quotes, technical indicators, reference data, and Chinese financial news
+- **pandas DataFrames on every call** — all methods return `pd.DataFrame`; empty results return `df.empty == True` rather than raising exceptions
+- **10+ years of historical data** covering all listed A-share stocks and major indices
+- **Real-time quote snapshots** — intraday price, OHLC, percentage change, volume, and timestamp, refreshed continuously during trading hours
+- **Stock Connect flows** — northbound and southbound holdings, per-stock and aggregate HSGT money-flow data
+- **Full financial statements** — income statement, balance sheet, cash flow, earnings forecasts, express results, and key financial indicators by reporting period
+- **Technical indicators** — MACD, KDJ, RSI, Bollinger Bands, CCI, and adjusted price series; a pro variant offers 200+ indicators with bfq/qfq/hfq price variants
+- **Chinese financial news** — real-time 财经快讯 flashes from 财联社 (cls), 金十 (jin10), and 新浪 (sina)
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Install the SDK and fetch your first DataFrame in under 5 minutes.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Get your API key and learn how to pass it securely.
+  </Card>
+  <Card title="Market Data Guide" icon="chart-line" href="/guides/market-data">
+    Explore daily OHLC prices, real-time quotes, and technical factors.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/market-daily">
+    Full parameter reference for every endpoint in the SDK.
+  </Card>
+</CardGroup>
+
+## Supported Python Versions
+
+AShareHub supports **Python 3.10, 3.11, 3.12, and 3.13**. The only runtime dependencies are `httpx >= 0.27.0` and `pandas >= 2.0.0`.
+
+```bash
+pip install asharehub
+```
+
+## API Versioning: v1 and v2
+
+The client defaults to the **v2** API, which is the recommended surface for all new projects. v2 uses a unified `symbol` parameter throughout (e.g. `000001.SZ`) and returns real JSON numbers rather than decimal strings.
+
+If you're migrating from a Tushare-style integration, you can opt into the **v1** legacy API by passing `version="v1"` to the constructor. The v1 API uses `ts_code` in responses and returns numeric values as strings.
+
+```python
+from asharehub import AShareHub
+
+# Default: v2 API (recommended)
+client = AShareHub(api_key="ash_your_key_here")
+
+# Legacy: v1 Tushare-style API
+client_v1 = AShareHub(api_key="ash_your_key_here", version="v1")
+```
+
+<Note>
+  Both v1 and v2 accept `symbol` as the input parameter in the Python SDK — the client handles the translation internally. The version setting only affects the shape of the response data.
+</Note>

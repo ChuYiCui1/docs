@@ -1,0 +1,199 @@
+---
+title: "Access Financial Statements and Earnings Data"
+sidebarTitle: "Financials"
+description: "Retrieve income statements, balance sheets, cash flows, earnings forecasts, dividends, and analyst reports for Chinese A-share companies."
+---
+
+AShareHub exposes the full suite of financial disclosure data for every A-share listed company — from standardised income statements and balance sheets to earnings forecasts, dividend records, analyst ratings, and annual audit opinions. All financial endpoints return `pd.DataFrame` objects keyed by `ts_code` and `end_date`, making it straightforward to build multi-period models or compare companies across a sector.
+
+## Financial Indicators (Key Ratios)
+
+`financial_indicators()` delivers the most-used per-share and profitability ratios in a single call, pre-calculated from the underlying statements. Use this as your first stop when screening for quality.
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_your_key")
+
+df = client.financial_indicators(
+    symbol="000001.SZ",
+    limit=20,
+)
+print(df[["end_date", "eps", "roe", "roa",
+          "gross_margin", "netprofit_margin",
+          "debt_to_assets", "current_ratio"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `eps` | Basic earnings per share (CNY) |
+| `roe` | Return on equity (%) |
+| `roa` | Return on assets (%) |
+| `gross_margin` | Gross profit margin (%) |
+| `netprofit_margin` | Net profit margin (%) |
+| `debt_to_assets` | Debt-to-assets ratio |
+| `current_ratio` | Current ratio |
+
+## Income Statement
+
+`income()` returns the standardised income statement for each reporting period. The SDK normalises fields across industries so you can compare banks and manufacturers on the same columns.
+
+```python
+df = client.income(
+    symbol="600519.SH",
+    limit=20,
+)
+print(df[["end_date", "report_type", "total_revenue", "revenue",
+          "operate_profit", "n_income", "basic_eps", "ebit", "ebitda"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `total_revenue` | Total revenues (CNY) |
+| `revenue` | Main operating revenue |
+| `operate_profit` | Operating profit |
+| `n_income` | Net income (total) |
+| `basic_eps` | Basic EPS |
+| `ebit` | Earnings before interest and taxes |
+| `ebitda` | EBITDA |
+
+## Balance Sheet
+
+`balance_sheet()` surfaces the standardised balance sheet for each period, covering current and non-current assets, liabilities, and shareholder equity.
+
+```python
+df = client.balance_sheet(
+    symbol="000858.SZ",
+    limit=20,
+)
+print(df[["end_date", "report_type",
+          "total_assets", "total_cur_assets",
+          "total_liab", "total_hldr_eqy_exc_min_int"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `total_assets` | Total assets (CNY) |
+| `total_cur_assets` | Total current assets |
+| `total_liab` | Total liabilities |
+| `total_hldr_eqy_exc_min_int` | Shareholders' equity (excl. minority interest) |
+
+## Cash Flow Statement
+
+`cash_flow()` returns the cash flow statement broken down into operating, investing, and financing activities, plus the pre-calculated `free_cashflow` field.
+
+```python
+df = client.cash_flow(
+    symbol="000001.SZ",
+    limit=20,
+)
+print(df[["end_date", "report_type",
+          "n_cashflow_act",
+          "n_cashflow_inv_act",
+          "free_cashflow"]])
+```
+
+Key columns returned:
+
+| Column | Description |
+|--------|-------------|
+| `n_cashflow_act` | Net cash from operating activities (CNY) |
+| `n_cashflow_inv_act` | Net cash from investing activities |
+| `n_cash_flows_fnc_act` | Net cash from financing activities |
+| `free_cashflow` | Free cash flow (operating less capex) |
+
+## Earnings Forecasts
+
+`forecast()` returns the company-issued earnings pre-announcements (业绩预告). These appear weeks before the full report and often move prices significantly.
+
+```python
+df = client.forecast(
+    symbol="000001.SZ",
+    limit=50,
+)
+print(df[["ann_date", "end_date", "type",
+          "p_change_min", "p_change_max",
+          "net_profit_min", "net_profit_max",
+          "summary"]])
+```
+
+| Column | Description |
+|--------|-------------|
+| `p_change_min` / `p_change_max` | Expected net-profit growth range (%) |
+| `net_profit_min` / `net_profit_max` | Absolute profit range (CNY) |
+| `summary` | Management commentary (Chinese) |
+| `change_reason` | Reason for deviation from prior period |
+
+## Earnings Express (快报)
+
+`express()` returns the preliminary earnings express (业绩快报) — a condensed snapshot of key P&L and balance-sheet lines published shortly after the period ends, before the full audited report.
+
+```python
+df = client.express(
+    symbol="600519.SH",
+    limit=20,
+)
+print(df[["ann_date", "end_date", "revenue",
+          "operate_profit", "n_income",
+          "total_assets", "diluted_roe",
+          "yoy_net_profit", "perf_summary"]])
+```
+
+## Dividends
+
+`dividend()` returns the full dividend and bonus-share history, including both cash distributions and stock splits (送股/转增).
+
+```python
+df = client.dividend(
+    symbol="000001.SZ",
+    limit=50,
+)
+print(df[["end_date", "ann_date",
+          "stk_div", "cash_div",
+          "ex_date", "pay_date", "div_proc"]])
+```
+
+| Column | Description |
+|--------|-------------|
+| `stk_div` | Bonus shares per 10 shares held |
+| `cash_div` | Cash dividend per share (pre-tax, CNY) |
+| `ex_date` | Ex-dividend date |
+| `pay_date` | Payment date |
+| `div_proc` | Approval status (e.g. `实施` = implemented) |
+
+## Analyst Reports
+
+`analyst_reports()` returns sell-side earnings forecasts and stock ratings published by Chinese brokerage research desks.
+
+```python
+df = client.analyst_reports(
+    symbol="600519.SH",
+    start_date="2024-01-01",
+    limit=100,
+)
+print(df.head())
+```
+
+Aggregate the consensus EPS or rating columns to build your own consensus estimate series.
+
+## Audit Opinions
+
+`audit()` returns the annual audit opinion issued by the external auditor, which is an important red-flag signal for governance risk.
+
+```python
+df = client.audit(
+    symbol="000001.SZ",
+    limit=10,
+)
+print(df.head())
+```
+
+<Note>
+All financial statement endpoints accept a `report_type` value in the underlying data that distinguishes annual reports (`1`), Q1 reports (`2`), semi-annual reports (`3`), and Q3 reports (`4`). You can filter the returned DataFrame with `df[df["report_type"] == "1"]` to isolate full-year figures. The default `limit` for financial endpoints is **20**, which covers five years of quarterly data — increase it if you need a longer history.
+</Note>

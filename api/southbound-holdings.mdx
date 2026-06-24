@@ -1,0 +1,96 @@
+---
+title: "southbound_holdings — Mainland HK Stock Holdings"
+sidebarTitle: "southbound_holdings"
+description: "Retrieve daily holdings of Hong Kong-listed stocks by mainland investors via the southbound Stock Connect (港股通持股)."
+---
+
+The `southbound_holdings` method returns daily snapshots of Hong Kong-listed stock holdings by mainland Chinese investors through the southbound Stock Connect channel (港股通持股). This is the mirror of [`northbound_holdings`](/api/northbound-holdings): while northbound tracks foreign investors buying A-shares, southbound tracks mainland investors buying HK-listed equities via either the Shanghai (沪港通) or Shenzhen (深港通) southbound link. The response format mirrors the northbound endpoint and includes per-stock holding volume and the ownership ratio.
+
+```python
+client.southbound_holdings(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  HK-listed stock code in suffixed format, e.g. `"00700.HK"` (Tencent). Omit to retrieve holdings across all southbound-eligible HK stocks for the given date range.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Filters rows where `trade_date >= start_date`.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Filters rows where `trade_date <= end_date`.
+</ParamField>
+
+<ParamField query="limit" type="int" default={100}>
+  Maximum number of rows to return. Defaults to `100`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset. Increment by `limit` to page through large result sets.
+</ParamField>
+
+## Response Fields
+
+The response mirrors the structure of [`northbound_holdings`](/api/northbound-holdings). The following fields are returned for each row:
+
+<ResponseField name="trade_date" type="date">
+  The date of the holding snapshot (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="ts_code" type="str">
+  HK-listed stock code, e.g. `"00700.HK"`.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Chinese or English short name of the stock.
+</ResponseField>
+
+<ResponseField name="exchange" type="str">
+  The southbound connect channel: `"SSE"` (沪港通 southbound leg) or `"SZSE"` (深港通 southbound leg).
+</ResponseField>
+
+<ResponseField name="vol" type="int">
+  Number of shares held by mainland southbound investors on this date, in lots (手).
+</ResponseField>
+
+<ResponseField name="ratio" type="float">
+  Mainland southbound holdings as a percentage of the HK stock's total issued shares, expressed as a percentage value.
+</ResponseField>
+
+<Note>
+  Like northbound data, southbound holdings are published by HKEX after market close each day. The `vol` field is expressed in **lots** (手); multiply by 100 to obtain the raw share count. The HK Stock Exchange imposes per-stock southbound ownership ceilings — if `ratio` approaches regulatory thresholds, new southbound purchases may be suspended.
+</Note>
+
+<Tip>
+  Combine `southbound_holdings` with HK price data (via `fx_daily` for CNY/HKD) to compute CNY-denominated position values for mainland investors.
+</Tip>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Mainland holdings of Tencent via southbound link in Q1 2024
+df = client.southbound_holdings(
+    symbol="00700.HK",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+)
+
+print(df[["trade_date", "vol", "ratio"]])
+
+# Compare ownership ratio trend
+print(df[["trade_date", "ratio"]].describe())
+```

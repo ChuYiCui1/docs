@@ -1,0 +1,118 @@
+---
+title: "fx_daily — Daily FX Rates (USD/CNH and Others)"
+sidebarTitle: "FX Daily"
+description: "Fetch daily FX bid/ask OHLC rates for currency pairs. Defaults to USD/CNH from FXCM. Use to incorporate currency risk context into A-share analysis."
+---
+
+The `fx_daily()` method returns daily foreign exchange rate data for currency pairs, sourced from FXCM. Each row contains the full bid and ask OHLC (open, high, low, close) price ladder for one currency pair on one trading day, along with the tick count for that session. The default pair is `USDCNH.FXCM`, which tracks the offshore Chinese yuan against the US dollar — a key macro indicator for A-share investors monitoring currency-driven capital flows.
+
+```python
+df = client.fx_daily(
+    symbol: Optional[str] = "USDCNH.FXCM",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" default="USDCNH.FXCM">
+  Currency pair code in `PAIR.BROKER` format, e.g. `"USDCNH.FXCM"` for offshore USD/CNH from FXCM. Defaults to `"USDCNH.FXCM"`.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request. A full calendar year of daily FX data is approximately 260 rows.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination.
+</ParamField>
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row represents one currency pair's daily data. Field definitions follow the `FxDaily` model.
+
+<ResponseField name="ts_code" type="str">
+  Currency pair code as stored in the database, e.g. `"USDCNH.FXCM"`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Date of the FX session (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="bid_open" type="float">
+  Bid-side opening rate for the session.
+</ResponseField>
+
+<ResponseField name="bid_close" type="float">
+  Bid-side closing rate for the session.
+</ResponseField>
+
+<ResponseField name="bid_high" type="float">
+  Bid-side intraday high rate.
+</ResponseField>
+
+<ResponseField name="bid_low" type="float">
+  Bid-side intraday low rate.
+</ResponseField>
+
+<ResponseField name="ask_open" type="float">
+  Ask-side opening rate for the session.
+</ResponseField>
+
+<ResponseField name="ask_close" type="float">
+  Ask-side closing rate for the session.
+</ResponseField>
+
+<ResponseField name="ask_high" type="float">
+  Ask-side intraday high rate.
+</ResponseField>
+
+<ResponseField name="ask_low" type="float">
+  Ask-side intraday low rate.
+</ResponseField>
+
+<ResponseField name="tick_qty" type="int">
+  Number of ticks (quote updates) recorded during the session. A higher tick count reflects greater intraday liquidity and activity.
+</ResponseField>
+
+## Example Usage
+
+<Tip>
+  The mid-price for any session can be approximated as `(bid_close + ask_close) / 2`. Use the bid/ask spread (`ask_close − bid_close`) as a proxy for market liquidity conditions.
+</Tip>
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch a full year of USD/CNH daily rates
+df = client.fx_daily(
+    symbol="USDCNH.FXCM",
+    start_date="2024-01-01",
+    limit=250,
+)
+print(df[["trade_date", "bid_close", "ask_close"]].head())
+
+# Calculate the daily mid-price and spread
+df["mid_close"] = (df["bid_close"] + df["ask_close"]) / 2
+df["spread"] = df["ask_close"] - df["bid_close"]
+print(df[["trade_date", "mid_close", "spread"]].head(10))
+
+# Identify sessions with the widest spreads (potential stress events)
+widest = df.nlargest(5, "spread")[["trade_date", "mid_close", "spread"]]
+print("Top 5 widest spread sessions:")
+print(widest)
+```

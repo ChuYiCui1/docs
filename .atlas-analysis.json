@@ -1,0 +1,162 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "AShareHub",
+  "projectDescription": "Python SDK for accessing institutional-grade Chinese A-Share market data through 38+ REST API endpoints, returning pandas DataFrames.",
+  "theme": "luma",
+  "primaryColor": "#D4372A",
+  "lightColor": "#F5E6E5",
+  "darkColor": "#1A0A09",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/symbol-format",
+              "concepts/pagination",
+              "concepts/versioning"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/market-data",
+              "guides/financials",
+              "guides/capital-flows",
+              "guides/real-time",
+              "guides/error-handling"
+            ]
+          },
+          {
+            "group": "Plans & Limits",
+            "pages": [
+              "plans",
+              "rate-limits"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Market Data",
+            "pages": [
+              "api/market-daily",
+              "api/fundamentals",
+              "api/realtime",
+              "api/technical-factors",
+              "api/adj-factor",
+              "api/limit-list",
+              "api/margin",
+              "api/block-trade",
+              "api/top-list",
+              "api/shareholders",
+              "api/holder-trade",
+              "api/concepts"
+            ]
+          },
+          {
+            "group": "Capital Flows",
+            "pages": [
+              "api/moneyflow-hsgt",
+              "api/moneyflow",
+              "api/northbound-holdings",
+              "api/southbound-holdings"
+            ]
+          },
+          {
+            "group": "Financials",
+            "pages": [
+              "api/financial-indicators",
+              "api/income",
+              "api/balance-sheet",
+              "api/cash-flow",
+              "api/forecast",
+              "api/dividend",
+              "api/analyst-reports"
+            ]
+          },
+          {
+            "group": "Reference & Indices",
+            "pages": [
+              "api/stock-list",
+              "api/industry-list",
+              "api/trade-calendar",
+              "api/index-daily",
+              "api/index-weight",
+              "api/fx-daily",
+              "api/chip-distribution",
+              "api/news-flash"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "38+ data endpoints covering market, financial, real-time, news, and reference data",
+    "Returns pandas DataFrames — same convention as Tushare",
+    "Real-time intraday quote snapshots for up to 200 symbols per call",
+    "10+ years of historical OHLCV and financial data",
+    "Stock Connect (HSGT) northbound and southbound capital flow tracking",
+    "200+ technical indicators with adjusted price variants (bfq/qfq/hfq)",
+    "Chinese financial news flashes from CLS, Jin10, and Sina",
+    "Secure API key authentication via X-API-Key header",
+    "Unified v2 API with suffixed symbol codes (e.g. 000001.SZ)",
+    "Context-manager support for safe resource cleanup"
+  ],
+  "publicApiSurface": [
+    "AShareHub(api_key, base_url, timeout, version)",
+    "client.market_daily(symbol, start_date, end_date, limit, offset)",
+    "client.fundamentals(symbol, start_date, end_date, limit, offset)",
+    "client.realtime(symbol, limit, offset)",
+    "client.technical_factors(symbol, start_date, end_date, limit, offset)",
+    "client.technical_factors_pro(symbol, start_date, end_date, limit, offset)",
+    "client.adj_factor(symbol, start_date, end_date, limit, offset)",
+    "client.limit_list(symbol, start_date, end_date, limit_type, limit, offset)",
+    "client.margin(symbol, start_date, end_date, limit, offset)",
+    "client.block_trade(symbol, start_date, end_date, limit, offset)",
+    "client.top_list(symbol, start_date, end_date, limit, offset)",
+    "client.top_inst(symbol, start_date, end_date, limit, offset)",
+    "client.shareholders(symbol, start_date, end_date, limit, offset)",
+    "client.holder_trade(symbol, start_date, end_date, limit, offset)",
+    "client.concepts(symbol, start_date, end_date, limit, offset)",
+    "client.concept_members(symbol, con_symbol, start_date, end_date, limit, offset)",
+    "client.moneyflow_hsgt(start_date, end_date, limit, offset)",
+    "client.moneyflow(symbol, start_date, end_date, limit, offset)",
+    "client.northbound_holdings(symbol, start_date, end_date, limit, offset)",
+    "client.southbound_holdings(symbol, start_date, end_date, limit, offset)",
+    "client.financial_indicators(symbol, start_date, end_date, limit, offset)",
+    "client.income(symbol, start_date, end_date, limit, offset)",
+    "client.balance_sheet(symbol, start_date, end_date, limit, offset)",
+    "client.cash_flow(symbol, start_date, end_date, limit, offset)",
+    "client.forecast(symbol, start_date, end_date, limit, offset)",
+    "client.express(symbol, start_date, end_date, limit, offset)",
+    "client.dividend(symbol, start_date, end_date, limit, offset)",
+    "client.analyst_reports(symbol, start_date, end_date, limit, offset)",
+    "client.audit(symbol, start_date, end_date, limit, offset)",
+    "client.main_business(symbol, start_date, end_date, limit, offset)",
+    "client.disclosure_date(symbol, start_date, end_date, limit, offset)",
+    "client.stock_list(symbol, limit, offset)",
+    "client.industry_list(symbol, limit, offset)",
+    "client.trade_calendar(exchange, start_date, end_date, is_open, limit, offset)",
+    "client.index_daily(symbol, start_date, end_date, limit, offset)",
+    "client.index_weight(symbol, start_date, end_date, limit, offset)",
+    "client.fx_daily(symbol, start_date, end_date, limit, offset)",
+    "client.chip_distribution(symbol, start_date, end_date, limit, offset)",
+    "client.news_flash(source, start_date, end_date, importance, limit, offset)",
+    "client.close()",
+    "AShareHub used as context manager (with statement)"
+  ]
+}

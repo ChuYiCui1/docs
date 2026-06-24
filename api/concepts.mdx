@@ -1,0 +1,135 @@
+---
+title: "concepts — Concept & Theme Sector Indices"
+sidebarTitle: "concepts"
+description: "Browse concept and theme sector indices (概念板块) with daily performance, leading stocks, turnover, and member counts for Chinese A-share market themes."
+---
+
+`concepts` returns daily performance data for Chinese A-share concept and theme sector indices (概念板块). The A-share market organises stocks into hundreds of thematic groups — such as AI chips, new energy vehicles, military industry, or traditional Chinese medicine — that often move together in response to policy announcements, macro events, or narrative momentum. Each row includes the index's daily percentage change, the leading stock and its individual return, total market cap, turnover rate, and the breadth of the move across members. To retrieve the constituent stocks of a specific concept index, use the companion method `concept_members`.
+
+```python
+df = client.concepts(
+    symbol="TS2",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Concept index code, e.g. `"TS2"`. Omit to retrieve all concept indices for the specified date range.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `ConceptIndex` model and represents one concept index on one trading day.
+
+<ResponseField name="ts_code" type="str">
+  Concept index code, e.g. `"TS2"`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Chinese name of the concept theme, e.g. `人工智能` (Artificial Intelligence).
+</ResponseField>
+
+<ResponseField name="leading" type="str">
+  Short name of the leading (strongest-performing) member stock of the concept on this day.
+</ResponseField>
+
+<ResponseField name="leading_code" type="str">
+  Suffixed stock code of the leading member, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="idx_type" type="str">
+  Index type identifier. Distinguishes between concept (概念) and other thematic classification schemes.
+</ResponseField>
+
+<ResponseField name="level" type="str">
+  Hierarchy level of the concept index within the classification tree (e.g. Level 1 or Level 2 theme).
+</ResponseField>
+
+<ResponseField name="pct_change" type="float">
+  Daily percentage change of the concept index (e.g. `3.21` means +3.21%).
+</ResponseField>
+
+<ResponseField name="leading_pct" type="float">
+  Daily percentage change of the leading member stock.
+</ResponseField>
+
+<ResponseField name="total_mv" type="float">
+  Total market capitalisation of all member stocks in the concept index, in 万元.
+</ResponseField>
+
+<ResponseField name="turnover_rate" type="float">
+  Average turnover rate of member stocks, as a percentage.
+</ResponseField>
+
+<ResponseField name="up_num" type="int">
+  Number of member stocks that rose (上涨家数) on this day.
+</ResponseField>
+
+<ResponseField name="down_num" type="int">
+  Number of member stocks that fell (下跌家数) on this day.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Top-performing concept indices on a specific date
+df_all = client.concepts(
+    start_date="2024-03-15",
+    end_date="2024-03-15",
+    limit=200,
+)
+top_themes = df_all.nlargest(10, "pct_change")[
+    ["ts_code", "name", "pct_change", "leading", "leading_pct", "up_num", "down_num"]
+]
+print(top_themes)
+
+# Historical performance of the AI concept index
+df_ai = client.concepts(
+    symbol="TS2",
+    start_date="2024-01-01",
+    end_date="2024-06-30",
+    limit=200,
+)
+print(df_ai[["trade_date", "name", "pct_change", "leading", "turnover_rate"]])
+
+# Get constituent stocks of a concept index
+members = client.concept_members(con_symbol="TS2", limit=100)
+print(members)
+```
+
+<Note>
+  Concept indices are **theme-based** groupings maintained by data providers and may overlap significantly — a single stock can belong to dozens of concepts simultaneously. They differ from industry classifications such as Shenwan, which are mutually exclusive.
+</Note>
+
+<Tip>
+  Sort by `up_num / (up_num + down_num)` to compute a breadth ratio for each concept. A high breadth ratio (most members rising) signals a broad, sector-wide move rather than one driven by a single leading stock.
+</Tip>

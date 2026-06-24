@@ -1,0 +1,125 @@
+---
+title: "market_daily — Daily OHLCV Data for A-Shares"
+sidebarTitle: "market_daily"
+description: "Use market_daily to retrieve daily open, high, low, close, volume, and price-change data for any listed Chinese A-share stock."
+---
+
+`market_daily` returns end-of-day OHLCV bars for Chinese A-share stocks traded on the Shanghai (SSE) and Shenzhen (SZSE) exchanges. Each row covers one trading day and includes the raw (unadjusted) open, high, low, and close prices, prior-day close, absolute price change, percentage change, trading volume, and turnover amount. Use `start_date` and `end_date` to narrow the date window, or pass a specific `symbol` to pull the full history for a single security.
+
+```python
+df = client.market_daily(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ` (Shenzhen) or `600519.SH` (Shanghai). Omit to query across all symbols.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format, e.g. `"2024-01-01"`. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format, e.g. `"2024-12-31"`. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return. Increase to page through larger result sets.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row in the returned `pd.DataFrame` corresponds to one stock on one trading day and maps to the `DailyBar` model.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="open" type="float">
+  Opening price for the day, in CNY.
+</ResponseField>
+
+<ResponseField name="high" type="float">
+  Intraday high price, in CNY.
+</ResponseField>
+
+<ResponseField name="low" type="float">
+  Intraday low price, in CNY.
+</ResponseField>
+
+<ResponseField name="close" type="float">
+  Closing price for the day, in CNY.
+</ResponseField>
+
+<ResponseField name="pre_close" type="float">
+  Previous trading day's closing price, in CNY. Used as the base for limit-up/limit-down calculations.
+</ResponseField>
+
+<ResponseField name="change" type="float">
+  Absolute price change: `close − pre_close`, in CNY.
+</ResponseField>
+
+<ResponseField name="pct_chg" type="float">
+  Percentage price change relative to `pre_close`, expressed as a percentage (e.g. `2.35` means +2.35%).
+</ResponseField>
+
+<ResponseField name="vol" type="float">
+  Trading volume in lots (手, 100 shares per lot).
+</ResponseField>
+
+<ResponseField name="amount" type="float">
+  Turnover amount in thousands of CNY (千元).
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch the last 20 trading days for Ping An Bank
+df = client.market_daily(symbol="000001.SZ", limit=20)
+print(df[["trade_date", "open", "high", "low", "close", "vol", "pct_chg"]])
+
+# Fetch all stocks on a specific date
+df_all = client.market_daily(start_date="2024-06-03", end_date="2024-06-03", limit=500)
+
+# Paginate through a full year of data for Kweichow Moutai
+frames = []
+offset = 0
+while True:
+    chunk = client.market_daily(
+        symbol="600519.SH",
+        start_date="2023-01-01",
+        end_date="2023-12-31",
+        limit=100,
+        offset=offset,
+    )
+    if chunk.empty:
+        break
+    frames.append(chunk)
+    offset += 100
+
+import pandas as pd
+history = pd.concat(frames, ignore_index=True)
+```
+
+<Tip>
+  Prices returned by `market_daily` are **unadjusted** (前复权/后复权 not applied). To compute backward-adjusted prices, pair this data with [`adj_factor`](/api/adj-factor).
+</Tip>

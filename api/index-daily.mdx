@@ -1,0 +1,130 @@
+---
+title: "index_daily — Daily Index Data for Chinese Markets"
+sidebarTitle: "Index Daily"
+description: "Retrieve daily OHLCV and return data for major Chinese market indices including SSE Composite, CSI 300, ChiNext, SSE 50, and SZSE Component."
+---
+
+The `index_daily()` method returns end-of-day price and volume data for Chinese equity market indices. Each row covers one trading day for one index and includes open, high, low, close prices, the previous close, net change, percentage return, trading volume, and turnover amount. The method defaults to the SSE Composite Index (`000001.SH`) but supports all major benchmark indices with a simple code swap.
+
+```python
+df = client.index_daily(
+    symbol: Optional[str] = "000001.SH",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" default="000001.SH">
+  Suffixed index code to query. Defaults to `"000001.SH"` (SSE Composite). See the index code reference table below for common values.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination.
+</ParamField>
+
+## Common Index Codes
+
+| Code | Name |
+|------|------|
+| `000001.SH` | SSE Composite (上证综指) |
+| `000300.SH` | CSI 300 (沪深300) |
+| `000016.SH` | SSE 50 (上证50) |
+| `399001.SZ` | SZSE Component (深证成指) |
+| `399006.SZ` | ChiNext (创业板指) |
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row represents one index's data for one trading day. Field definitions follow the `IndexDaily` model.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed index code, e.g. `"000001.SH"`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date for this row (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="open" type="float">
+  Opening index level at the start of the trading session.
+</ResponseField>
+
+<ResponseField name="high" type="float">
+  Intraday high index level.
+</ResponseField>
+
+<ResponseField name="low" type="float">
+  Intraday low index level.
+</ResponseField>
+
+<ResponseField name="close" type="float">
+  Closing index level at end of the trading session.
+</ResponseField>
+
+<ResponseField name="pre_close" type="float">
+  Previous trading day's closing index level.
+</ResponseField>
+
+<ResponseField name="change" type="float">
+  Absolute change in index level: `close − pre_close`.
+</ResponseField>
+
+<ResponseField name="pct_chg" type="float">
+  Percentage change in index level: `(close − pre_close) / pre_close × 100`.
+</ResponseField>
+
+<ResponseField name="vol" type="float">
+  Aggregate trading volume across constituent stocks (in lots).
+</ResponseField>
+
+<ResponseField name="amount" type="float">
+  Aggregate turnover across constituent stocks (in CNY thousands).
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+# Retrieve the last 100 trading days of the CSI 300
+csi300 = client.index_daily(
+    symbol="000300.SH",
+    start_date="2024-01-01",
+    end_date="2024-12-31",
+    limit=300,
+)
+print(csi300[["trade_date", "open", "close", "pct_chg", "vol"]].head(10))
+
+# Compare two indices over the same period
+szse_component = client.index_daily(
+    symbol="399001.SZ",
+    start_date="2024-01-01",
+    limit=250,
+)
+
+# Calculate cumulative return
+csi300["cum_return"] = (1 + csi300["pct_chg"] / 100).cumprod() - 1
+print(f"CSI 300 YTD return: {csi300['cum_return'].iloc[-1]:.2%}")
+```
+
+<Tip>
+  When comparing multiple indices, request each separately with the same `start_date` / `end_date` window, then merge on `trade_date` for a clean side-by-side DataFrame.
+</Tip>

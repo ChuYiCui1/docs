@@ -1,0 +1,111 @@
+---
+title: "Fetch Real-Time A-Share Quotes with AShareHub"
+sidebarTitle: "Real-Time"
+description: "Get live intraday quote snapshots for up to 200 A-share symbols per call using AShareHub's realtime endpoint during trading hours."
+---
+
+The `realtime()` endpoint delivers a live snapshot of the latest market quote for any A-share stock or index. Each row contains the current price, intraday OHLC, percentage change versus the prior close, cumulative volume and turnover, and the exchange timestamp of the last tick — everything you need to build a watchlist, trigger alerts, or feed a live dashboard. The data refreshes continuously throughout trading hours on the SSE and SZSE.
+
+## Fetching a Single Symbol
+
+Pass a single suffixed code to `symbol` to retrieve the latest quote for one instrument.
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_your_key")
+
+df = client.realtime(symbol="600519.SH")
+print(df[["ts_code", "name", "price", "pct_chg", "volume", "trade_time"]])
+```
+
+## Fetching a Basket of Symbols
+
+Pass a comma-separated string of up to 200 codes to pull multiple quotes in a single API call. This is far more efficient than looping over individual requests.
+
+```python
+df = client.realtime(symbol="600519.SH,000001.SZ,000858.SZ")
+print(df[["ts_code", "price", "pct_chg"]])
+```
+
+Sorting or filtering the resulting DataFrame lets you instantly find the best and worst performers in your watchlist:
+
+```python
+top_movers = df.nlargest(5, "pct_chg")
+print(top_movers[["ts_code", "name", "price", "pct_chg"]])
+```
+
+## Scanning the Whole Market
+
+Omit `symbol` entirely and use `limit` and `offset` to paginate through every listed A-share. Concatenate the pages into one DataFrame for a full market snapshot.
+
+```python
+import pandas as pd
+
+all_quotes = []
+offset = 0
+
+while True:
+    df = client.realtime(limit=100, offset=offset)
+    if df.empty:
+        break
+    all_quotes.append(df)
+    offset += 100
+
+market = pd.concat(all_quotes, ignore_index=True)
+print(f"Total stocks fetched: {len(market)}")
+print(market[["ts_code", "name", "price", "pct_chg"]].head(10))
+```
+
+## Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts_code` | `str` | Suffixed stock code (e.g. `600519.SH`) |
+| `name` | `str` | Stock short name (Chinese) |
+| `price` | `float` | Latest traded price (CNY) |
+| `open` | `float` | Opening price for the session |
+| `high` | `float` | Intraday high |
+| `low` | `float` | Intraday low |
+| `pre_close` | `float` | Previous session closing price |
+| `pct_chg` | `float` | Percentage change vs. prior close (%) |
+| `volume` | `float` | Cumulative volume since open (lots) |
+| `amount` | `float` | Cumulative turnover since open (CNY) |
+| `trade_time` | `datetime` | Exchange timestamp of the latest tick (CST) |
+
+## Trading Hours
+
+<Note>
+Both the SSE and SZSE operate **09:30 – 15:00 CST, Monday through Friday**, excluding public holidays. Outside these hours, `realtime()` returns the last available snapshot from the prior session's close. Use `trade_calendar()` to check whether a given date is an open trading day before polling:
+
+```python
+cal = client.trade_calendar(
+    exchange="SSE",
+    start_date="2024-01-01",
+    end_date="2024-01-31",
+)
+open_days = cal[cal["is_open"] == 1]["cal_date"].tolist()
+print(open_days)
+```
+</Note>
+
+## Rate Limits
+
+<Warning>
+Polling `realtime()` in a tight loop consumes your daily API quota quickly. On paid plans, poll **at most once every few seconds** per unique symbol or basket. Treat each paginated market-scan loop as multiple requests — a 5 000-stock universe at `limit=100` costs 50 calls per scan. See [Rate Limits](/rate-limits) for per-plan quotas and best-practice guidance.
+</Warning>
+
+## Pairing Quotes with News
+
+<Tip>
+Call `news_flash()` in parallel with `realtime()` to surface market-moving headlines alongside live prices. Filter by `importance` to focus on high-priority bulletins from feeds like 财联社 (`cls`) or 金十 (`jin10`) that are most likely to drive intraday moves:
+
+```python
+news = client.news_flash(
+    source="cls",
+    importance=1,
+    limit=20,
+)
+print(news[["publish_time", "content_cn", "tags"]].head())
+```
+</Tip>

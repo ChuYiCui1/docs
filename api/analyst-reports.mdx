@@ -1,0 +1,98 @@
+---
+title: "analyst_reports — Sell-Side Earnings Forecasts"
+sidebarTitle: "analyst_reports"
+description: "Access sell-side analyst earnings forecasts and stock ratings for A-share companies from major Chinese brokerage research departments."
+---
+
+The `analyst_reports` method returns sell-side analyst earnings forecasts and stock ratings compiled from Chinese brokerage research departments. Each row typically represents one analyst report or consensus estimate entry for a given stock, covering forward earnings projections, target prices, and rating categories. Because the schema can vary by data provider and brokerage source, you should inspect `df.columns` on your first call to discover the exact fields available for your subscription tier before building downstream analysis.
+
+```python
+client.analyst_reports(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `"000001.SZ"`. Omit to retrieve analyst reports across multiple companies for the given date range.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Typically filters on the report publication date.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="limit" type="int" default={100}>
+  Maximum number of rows to return. Defaults to `100`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset.
+</ParamField>
+
+<Note>
+  The response schema for `analyst_reports` is **flexible** and may vary by subscription tier. Always inspect `df.columns` after your first call to see which fields are available on your plan before writing production code that references specific column names.
+</Note>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch recent analyst reports for CATL
+df = client.analyst_reports(
+    symbol="300750.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=50,
+)
+
+# Discover available fields for your subscription
+print("Available columns:", df.columns.tolist())
+print(df.head())
+```
+
+## Related Financial Data Endpoints
+
+Several other endpoints expose complementary fundamental and corporate governance data that pair naturally with analyst reports.
+
+### Audit Opinions
+
+Retrieve annual audit opinion (审计意见) records — the external auditor's conclusion on the company's financial statements.
+
+```python
+# Audit opinions for a stock
+df = client.audit(symbol="000001.SZ", limit=20)
+```
+
+### Main Business Composition
+
+Break down a company's revenue by operating segment (主营业务构成). Useful for understanding which product lines or regions drive the business.
+
+```python
+# Main business composition by segment
+df = client.main_business(symbol="000001.SZ", limit=50)
+```
+
+### Planned Disclosure Dates
+
+Retrieve a company's planned (and actual) financial report disclosure schedule (业绩预披露). Use this to know when to expect the next earnings filing.
+
+```python
+# Planned disclosure dates
+df = client.disclosure_date(symbol="000001.SZ", limit=50)
+```
+
+<Tip>
+  Combine `disclosure_date` with `forecast` to build an earnings calendar: pull the scheduled report dates, then check if a 业绩预告 has already been issued for that period to get an early read on the expected outcome.
+</Tip>

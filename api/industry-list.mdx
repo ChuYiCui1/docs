@@ -1,0 +1,113 @@
+---
+title: "industry_list — Shenwan Industry Classification"
+sidebarTitle: "Industry List"
+description: "Access the Shenwan (申万) three-tier industry classification for all listed A-share stocks, covering level 1, level 2, and level 3 sector codes and names."
+---
+
+The `industry_list()` method returns the Shenwan Research Institute (申万研究所) industry classification for A-share stocks. Shenwan is the most widely-used industry taxonomy in the Chinese equity market, dividing stocks into three hierarchical tiers — from broad sector down to fine-grained sub-industry. Each row in the response maps a single stock to its full three-level classification chain.
+
+```python
+df = client.industry_list(
+    symbol: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Filter to a single stock by its suffixed code, e.g. `"600519.SH"`. Omit to retrieve classifications for all stocks (paginated).
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination. Increment by `limit` on each call to page through the full dataset.
+</ParamField>
+
+<Note>
+  This endpoint does **not** accept `start_date` or `end_date` parameters. Classifications reflect the current Shenwan standard; reclassification history is not exposed through this endpoint.
+</Note>
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row maps one stock to its Shenwan industry classification. Field definitions follow the `IndustryClassification` model.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `"600519.SH"`.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Short Chinese stock name, e.g. `"贵州茅台"`.
+</ResponseField>
+
+<ResponseField name="l1_code" type="str">
+  Shenwan Level 1 (tier-1) industry code, e.g. `"801120"` for Food & Beverage (食品饮料).
+</ResponseField>
+
+<ResponseField name="l1_name" type="str">
+  Shenwan Level 1 industry name in Chinese, e.g. `"食品饮料"`.
+</ResponseField>
+
+<ResponseField name="l2_code" type="str">
+  Shenwan Level 2 (tier-2) sub-industry code, providing a finer classification within the Level 1 sector.
+</ResponseField>
+
+<ResponseField name="l2_name" type="str">
+  Shenwan Level 2 sub-industry name in Chinese.
+</ResponseField>
+
+<ResponseField name="l3_code" type="str">
+  Shenwan Level 3 (tier-3) micro-industry code, the most granular classification level.
+</ResponseField>
+
+<ResponseField name="l3_name" type="str">
+  Shenwan Level 3 micro-industry name in Chinese.
+</ResponseField>
+
+## Example Usage
+
+<Tip>
+  Combine `industry_list()` with `stock_list()` to group A-share stocks by sector for universe construction, index replication, or sector-rotation strategies.
+</Tip>
+
+The example below fetches the full classification table and groups stocks by their Level 1 sector.
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+# Page through the full classification table
+all_rows = []
+offset = 0
+page_size = 500
+
+while True:
+    batch = client.industry_list(limit=page_size, offset=offset)
+    if batch.empty:
+        break
+    all_rows.append(batch)
+    offset += page_size
+
+classifications = pd.concat(all_rows, ignore_index=True)
+
+# Count stocks per Level 1 sector
+sector_counts = (
+    classifications
+    .groupby(["l1_code", "l1_name"])["ts_code"]
+    .count()
+    .reset_index()
+    .rename(columns={"ts_code": "stock_count"})
+    .sort_values("stock_count", ascending=False)
+)
+print(sector_counts.head(10))
+
+# Look up the full classification for a single stock
+single = client.industry_list(symbol="600519.SH")
+print(single[["ts_code", "name", "l1_name", "l2_name", "l3_name"]])
+```

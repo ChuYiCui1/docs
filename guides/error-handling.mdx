@@ -1,0 +1,113 @@
+---
+title: "Handle Errors and Exceptions in AShareHub"
+sidebarTitle: "Error Handling"
+description: "Learn how AShareHub raises exceptions for HTTP errors, what status codes mean, and patterns for retrying and handling rate limits gracefully."
+---
+
+AShareHub uses [httpx](https://www.python-httpx.org/) under the hood for all HTTP communication. When the API returns a non-2xx status code, the client calls `response.raise_for_status()`, which raises an `httpx.HTTPStatusError`. Catching that single exception type is all you need to handle every category of API error — authentication failures, rate limits, invalid inputs, and server faults alike.
+
+## HTTP Status Codes
+
+| Code | Meaning | Recommended Action |
+|------|---------|-------------------|
+| `401` | Invalid or missing API key | Verify the key passed to `AShareHub(api_key=…)`; re-generate at [asharehub.com/console](https://asharehub.com/console) if needed |
+| `403` | Forbidden — feature not on your plan | Upgrade your plan to access this endpoint |
+| `404` | Endpoint not found | Check the method name in the [API reference](/api/market-daily) |
+| `422` | Unprocessable — invalid symbol format | Verify the symbol uses the suffixed format, e.g. `000001.SZ` or `600519.SH` |
+| `429` | Rate limit exceeded | Back off and retry; see [Rate Limits](/rate-limits) for per-plan quotas |
+| `500` | Server error | Retry with exponential backoff; contact support if the error persists |
+
+## Handling Errors in Practice
+
+Wrap your API calls in a `try / except` block and branch on `e.response.status_code` to take the right action for each error class.
+
+```python
+from asharehub import AShareHub
+import httpx
+import time
+
+client = AShareHub(api_key="ash_your_key")
+
+try:
+    df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+except httpx.HTTPStatusError as e:
+    if e.response.status_code == 401:
+        print("Invalid API key — check your key at asharehub.com/console")
+    elif e.response.status_code == 429:
+        print("Rate limit exceeded — waiting before retrying")
+        time.sleep(60)
+    elif e.response.status_code == 422:
+        print("Invalid symbol format — use suffixed codes like 000001.SZ")
+    else:
+        print(f"Request failed: {e.response.status_code}")
+```
+
+## Empty Results Are Not Errors
+
+When a valid request returns no matching rows — for example, querying a weekend date for price data — the SDK returns an empty DataFrame rather than raising an exception. Always check `df.empty` before accessing columns.
+
+```python
+df = client.market_daily(symbol="000001.SZ", start_date="2024-01-06",
+                         end_date="2024-01-07")  # Saturday + Sunday
+if df.empty:
+    print("No data — the market was likely closed on those dates.")
+else:
+    print(df.head())
+```
+
+This behaviour is consistent across all 38 endpoints: `df.empty == True` means "no records match your query", not "something went wrong".
+
+## Retry with Exponential Backoff
+
+For rate-limited (`429`) or transient server errors (`500`), a simple retry helper with exponential backoff keeps your pipeline running without manual intervention.
+
+```python
+import time
+import httpx
+
+def fetch_with_retry(fn, retries=3, backoff=5):
+    """Call fn() up to `retries` times, doubling the wait after each 429."""
+    for attempt in range(retries):
+        try:
+            df = fn()
+            return df
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429 and attempt < retries - 1:
+                wait = backoff * (2 ** attempt)
+                print(f"Rate limited — retrying in {wait}s (attempt {attempt + 1}/{retries})")
+                time.sleep(wait)
+            else:
+                raise
+
+# Usage
+df = fetch_with_retry(
+    lambda: client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+)
+```
+
+The backoff sequence for the default parameters is 5 s → 10 s → 20 s. Increase `backoff` or `retries` for batch jobs that run against higher-volume endpoints.
+
+## Always Close the Client
+
+<Tip>
+Use `AShareHub` as a context manager so the underlying `httpx.Client` connection pool is always closed cleanly — even if an exception is raised mid-script.
+
+```python
+from asharehub import AShareHub
+import httpx
+
+with AShareHub(api_key="ash_your_key") as client:
+    try:
+        df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+        print(df.head())
+    except httpx.HTTPStatusError as e:
+        print(f"API error: {e.response.status_code}")
+# The client closes here regardless of whether an exception was raised.
+```
+
+If you instantiate the client outside a `with` block, call `client.close()` explicitly in a `finally` clause.
+</Tip>
+
+---
+
+For full details on per-plan request quotas and burst limits, see [Rate Limits](/rate-limits).

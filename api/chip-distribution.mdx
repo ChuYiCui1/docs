@@ -1,0 +1,119 @@
+---
+title: "chip_distribution — Chip Distribution and Cost Basis"
+sidebarTitle: "Chip Distribution"
+description: "Get daily chip distribution data showing the cost basis distribution of current shareholders and the winner rate for any Chinese A-share stock."
+---
+
+The `chip_distribution()` method returns daily chip distribution statistics for A-share stocks. "Chips" (筹码) represent the shares currently held by investors at various cost price levels. The data describes the cost basis distribution of all current shareholders — from the 5th to the 95th percentile — alongside the weighted-average cost and the `winner_rate`, which tells you what proportion of shareholders are currently sitting on a profit. These metrics are widely used in Chinese technical analysis to gauge investor sentiment, identify support/resistance zones, and assess the concentration of trapped positions.
+
+```python
+df = client.chip_distribution(
+    symbol: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Suffixed stock code, e.g. `"000001.SZ"`. Strongly recommended — querying without a symbol returns chip data across all stocks, which is very large and typically not useful without filtering.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range (inclusive) in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination.
+</ParamField>
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row represents one stock's chip distribution on one trading day. Field definitions follow the `ChipDistribution` model.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `"000001.SZ"`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date for this chip distribution snapshot (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="his_low" type="float">
+  Historical lowest cost price among current shareholders (in CNY).
+</ResponseField>
+
+<ResponseField name="his_high" type="float">
+  Historical highest cost price among current shareholders (in CNY).
+</ResponseField>
+
+<ResponseField name="cost_5pct" type="float">
+  The price level below which 5% of all chips (shares) were accumulated. Only 5% of current shareholders paid less than this price.
+</ResponseField>
+
+<ResponseField name="cost_15pct" type="float">
+  The price level below which 15% of chips were accumulated.
+</ResponseField>
+
+<ResponseField name="cost_50pct" type="float">
+  The median cost price — 50% of current shareholders paid less than this level. Commonly used as a support/resistance reference.
+</ResponseField>
+
+<ResponseField name="cost_85pct" type="float">
+  The price level below which 85% of chips were accumulated.
+</ResponseField>
+
+<ResponseField name="cost_95pct" type="float">
+  The price level below which 95% of all chips were accumulated. Only 5% of current shareholders paid more than this price.
+</ResponseField>
+
+<ResponseField name="weight_avg" type="float">
+  Volume-weighted average cost price of all current shareholders (in CNY).
+</ResponseField>
+
+<ResponseField name="winner_rate" type="float">
+  Percentage of current shareholders who are currently profitable (i.e., whose average cost is below the current market price). Expressed as a value between 0 and 100.
+</ResponseField>
+
+## Example Usage
+
+<Tip>
+  A rising `winner_rate` alongside rising price indicates healthy broad-based participation. A high `winner_rate` (e.g. above 90%) near a historical peak can signal distribution risk — most holders are in profit and may look to sell.
+</Tip>
+
+```python
+from asharehub import AShareHub
+import pandas as pd
+
+client = AShareHub(api_key="ash_...")
+
+# Get the last 60 trading days of chip data for Ping An Bank
+df = client.chip_distribution(
+    symbol="000001.SZ",
+    start_date="2024-07-01",
+    end_date="2024-09-30",
+    limit=100,
+)
+print(df[[
+    "trade_date", "cost_50pct", "weight_avg", "winner_rate"
+]].head(10))
+
+# Identify days when more than 70% of holders were profitable
+high_winner = df[df["winner_rate"] > 70]
+print(f"Days with winner_rate > 70%: {len(high_winner)}")
+
+# Plot cost band tightness (95th pct vs 5th pct spread)
+df["cost_spread"] = df["cost_95pct"] - df["cost_5pct"]
+print(df[["trade_date", "cost_spread"]].tail(5))
+```

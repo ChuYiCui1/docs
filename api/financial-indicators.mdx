@@ -1,0 +1,197 @@
+---
+title: "financial_indicators — Key Financial Ratios"
+sidebarTitle: "financial_indicators"
+description: "Retrieve per-period financial ratios including EPS, ROE, ROA, gross margin, debt ratios, and growth metrics for Chinese A-share companies."
+---
+
+The `financial_indicators` method returns a comprehensive set of derived financial ratios and per-share metrics for A-share companies, calculated from their filed financial statements. Each row corresponds to one reporting period (季报 quarterly or 年报 annual) and covers profitability ratios (ROE, ROA, ROIC, margins), liquidity ratios (current, quick, cash), efficiency ratios (asset turnover, inventory turnover), and year-over-year growth metrics. This is the fastest way to screen for quality companies without parsing raw financial statements yourself.
+
+```python
+client.financial_indicators(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `"000001.SZ"`. Omit to retrieve indicators across multiple companies for the given period range.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter by reporting period start date (`YYYY-MM-DD`). Matches rows where `end_date >= start_date`.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter by reporting period end date (`YYYY-MM-DD`). Matches rows where `end_date <= end_date`.
+</ParamField>
+
+<ParamField query="limit" type="int" default={20}>
+  Maximum number of rows to return. Defaults to `20` (lower than other endpoints due to the column-dense response).
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset.
+</ParamField>
+
+## Response Fields
+
+### Identifiers
+
+<ResponseField name="ts_code" type="str">
+  Stock code in suffixed format, e.g. `"000001.SZ"`.
+</ResponseField>
+
+<ResponseField name="ann_date" type="date | None">
+  Date the period's financial report was officially announced (`YYYY-MM-DD`). May be `null` for historical records.
+</ResponseField>
+
+<ResponseField name="end_date" type="date">
+  Reporting period end date — e.g. `"2023-12-31"` for the annual report, `"2023-09-30"` for Q3.
+</ResponseField>
+
+### Per-Share Metrics
+
+<ResponseField name="eps" type="float">
+  Basic earnings per share (基本每股收益), in CNY.
+</ResponseField>
+
+<ResponseField name="dt_eps" type="float">
+  Diluted/deducted earnings per share (稀释/扣非每股收益), in CNY.
+</ResponseField>
+
+<ResponseField name="total_revenue_ps" type="float">
+  Total revenue per share (每股营业总收入), in CNY.
+</ResponseField>
+
+<ResponseField name="revenue_ps" type="float">
+  Operating revenue per share (每股营业收入), in CNY.
+</ResponseField>
+
+<ResponseField name="bps" type="float">
+  Book value per share / net assets per share (每股净资产), in CNY.
+</ResponseField>
+
+<ResponseField name="ocfps" type="float">
+  Operating cash flow per share (每股经营活动产生的现金流量净额), in CNY.
+</ResponseField>
+
+### Profitability Ratios
+
+<ResponseField name="roe" type="float">
+  Return on equity (净资产收益率), as a percentage.
+</ResponseField>
+
+<ResponseField name="roe_waa" type="float">
+  Weighted average ROE (加权平均净资产收益率), as a percentage.
+</ResponseField>
+
+<ResponseField name="roe_dt" type="float">
+  ROE after deducting non-recurring items (扣非净资产收益率), as a percentage.
+</ResponseField>
+
+<ResponseField name="roa" type="float">
+  Return on total assets (总资产净利率/ROA), as a percentage.
+</ResponseField>
+
+<ResponseField name="roic" type="float">
+  Return on invested capital (投入资本回报率/ROIC), as a percentage.
+</ResponseField>
+
+<ResponseField name="gross_margin" type="float">
+  Gross profit margin (毛利率), as a percentage.
+</ResponseField>
+
+<ResponseField name="grossprofit_margin" type="float">
+  Gross profit margin computed from total revenue (营业总收入口径毛利率), as a percentage.
+</ResponseField>
+
+<ResponseField name="netprofit_margin" type="float">
+  Net profit margin (净利润率), as a percentage.
+</ResponseField>
+
+### Solvency & Liquidity Ratios
+
+<ResponseField name="debt_to_assets" type="float">
+  Debt-to-assets ratio (资产负债率), as a percentage.
+</ResponseField>
+
+<ResponseField name="current_ratio" type="float">
+  Current ratio (流动比率) — current assets ÷ current liabilities.
+</ResponseField>
+
+<ResponseField name="quick_ratio" type="float">
+  Quick ratio (速动比率) — (current assets − inventories) ÷ current liabilities.
+</ResponseField>
+
+<ResponseField name="cash_ratio" type="float">
+  Cash ratio (现金比率) — cash & equivalents ÷ current liabilities.
+</ResponseField>
+
+### Efficiency Ratios
+
+<ResponseField name="assets_turn" type="float">
+  Total asset turnover ratio (总资产周转率), times per year.
+</ResponseField>
+
+<ResponseField name="inv_turn" type="float">
+  Inventory turnover ratio (存货周转率), times per year.
+</ResponseField>
+
+<ResponseField name="ar_turn" type="float">
+  Accounts receivable turnover ratio (应收账款周转率), times per year.
+</ResponseField>
+
+### Growth Metrics (Year-over-Year)
+
+<ResponseField name="basic_eps_yoy" type="float">
+  YoY growth in basic EPS (基本每股收益同比增长率), as a percentage.
+</ResponseField>
+
+<ResponseField name="dt_eps_yoy" type="float">
+  YoY growth in diluted/deducted EPS, as a percentage.
+</ResponseField>
+
+<ResponseField name="netprofit_yoy" type="float">
+  YoY growth in net profit (归母净利润同比增长率), as a percentage.
+</ResponseField>
+
+<ResponseField name="dt_netprofit_yoy" type="float">
+  YoY growth in net profit after deducting non-recurring items, as a percentage.
+</ResponseField>
+
+### R&D
+
+<ResponseField name="rd_exp" type="float">
+  Research and development expenditure (研发费用), in CNY 10,000 (万元).
+</ResponseField>
+
+<Tip>
+  To screen for high-quality companies, filter for `roe > 15` and `debt_to_assets < 60` over several consecutive periods. Combining `roe_dt` (deducted ROE) with `netprofit_yoy` helps identify sustainable earnings growth versus one-off gains.
+</Tip>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Annual indicators for CATL (300750.SZ) — last 5 years
+df = client.financial_indicators(
+    symbol="300750.SZ",
+    start_date="2019-01-01",
+    end_date="2023-12-31",
+    limit=20,
+)
+
+# Key profitability snapshot
+print(df[["end_date", "eps", "roe", "roa", "netprofit_margin", "netprofit_yoy"]])
+
+# Check leverage trend
+print(df[["end_date", "debt_to_assets", "current_ratio", "quick_ratio"]])
+```

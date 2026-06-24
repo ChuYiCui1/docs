@@ -1,0 +1,128 @@
+---
+title: "holder_trade — Major Shareholder Trades (增减持)"
+sidebarTitle: "holder_trade"
+description: "Track buy and sell disclosures by major shareholders (5%+ holders) of Chinese A-share companies, including volume, ratio, and average price."
+---
+
+`holder_trade` returns mandatory disclosure records for share buy or sell transactions by major shareholders — defined as any entity holding 5% or more of a listed company's total shares. Chinese securities law requires these holders to publicly disclose any planned change in their stake within two trading days of the decision, making this data a real-time window into insider activity. Each record captures the holder's identity and type, whether they are increasing or decreasing their position, the volume and ratio changed, their average transaction price, and the resulting post-trade holding.
+
+```python
+df = client.holder_trade(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-12-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to query disclosures across all companies.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter by `ann_date` (announcement date) starting from this date, in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter by `ann_date` (announcement date) up to this date, in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `HolderTrade` model and represents one major-shareholder trade disclosure.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code of the company whose shares were traded, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="ann_date" type="date">
+  Announcement (disclosure) date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="holder_name" type="str">
+  Full legal name of the major shareholder making the disclosure.
+</ResponseField>
+
+<ResponseField name="holder_type" type="str">
+  Type of shareholder. Common values include `"G"` (国有, state-owned), `"P"` (个人, individual/private), and `"F"` (法人, legal entity).
+</ResponseField>
+
+<ResponseField name="in_de" type="str">
+  Direction of the trade: `"IN"` for an increase (增持, buying more shares), `"DE"` for a decrease (减持, selling shares).
+</ResponseField>
+
+<ResponseField name="change_vol" type="float">
+  Volume of shares bought or sold in this disclosure, in shares.
+</ResponseField>
+
+<ResponseField name="change_ratio" type="float">
+  Change as a percentage of total shares outstanding (e.g. `0.52` means the stake changed by 0.52 percentage points).
+</ResponseField>
+
+<ResponseField name="after_share" type="float">
+  Total shares held by this shareholder after the transaction, in shares.
+</ResponseField>
+
+<ResponseField name="after_ratio" type="float">
+  Percentage of total shares outstanding held after the transaction (e.g. `8.34` means 8.34%).
+</ResponseField>
+
+<ResponseField name="avg_price" type="float">
+  Volume-weighted average transaction price during the trading window, in CNY.
+</ResponseField>
+
+<ResponseField name="total_share" type="float">
+  Total shares outstanding of the company at the time of disclosure, in shares.
+</ResponseField>
+
+<ResponseField name="begin_date" type="date">
+  Start date of the trading window during which the transactions occurred.
+</ResponseField>
+
+<ResponseField name="close_date" type="date">
+  End date of the trading window during which the transactions occurred.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# All major-shareholder disclosures for Kweichow Moutai
+df = client.holder_trade(symbol="600519.SH", limit=50)
+print(df[["ann_date", "holder_name", "in_de", "change_vol", "avg_price", "after_ratio"]])
+
+# Market-wide reduction disclosures (减持) in a date range
+df_all = client.holder_trade(
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=500,
+)
+reductions = df_all[df_all["in_de"] == "DE"].sort_values("change_vol", ascending=False)
+print(reductions[["ts_code", "holder_name", "holder_type", "change_vol", "avg_price"]].head(20))
+
+# State-owned shareholder increases only
+soe_buys = df_all[(df_all["in_de"] == "IN") & (df_all["holder_type"] == "G")]
+print(soe_buys[["ts_code", "holder_name", "change_vol", "after_ratio"]])
+```
+
+<Note>
+  Chinese regulations require disclosures when a major shareholder's stake crosses a **5% threshold** or when a holder already above 5% buys or sells more than 1% within 6 months. The `begin_date` to `close_date` window can span up to 6 months for a planned reduction programme (减持计划).
+</Note>
+
+<Tip>
+  Large-scale state-owned shareholder increases (`holder_type = "G"`, `in_de = "IN"`) during market downturns often coincide with government stabilisation actions (国家队入市) and can be a useful macro-level signal.
+</Tip>

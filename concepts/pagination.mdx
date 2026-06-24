@@ -1,0 +1,83 @@
+---
+title: "Paginating Through Large Result Sets"
+sidebarTitle: "Pagination"
+description: "All AShareHub endpoints support limit and offset pagination. Learn how to page through large datasets and fetch all results in a loop."
+---
+
+Every AShareHub method accepts two standard pagination parameters — `limit` and `offset` — that give you precise control over how many rows are returned and where in the result set to start. Because the API enforces a maximum row count per request, you need to page through results in a loop whenever you want to retrieve more data than a single call returns.
+
+## Pagination Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | `int` | 100 (most endpoints); 20 (financials) | Maximum number of rows returned per request. |
+| `offset` | `int` | 0 | Number of rows to skip before returning results. Increment by `limit` on each page. |
+
+<Note>
+  Most market-data and reference endpoints default to `limit=100`. Financial statement endpoints — `income()`, `balance_sheet()`, `cash_flow()`, and `financial_indicators()` — default to `limit=20` because each row represents a full reporting period and responses are significantly larger.
+</Note>
+
+## Basic Example
+
+To fetch the most recent 50 trading days of daily price data for Ping An Bank, set `limit=50` and leave `offset` at its default of `0`:
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+df = client.market_daily(symbol="000001.SZ", limit=50, offset=0)
+print(df[["trade_date", "open", "high", "low", "close", "vol"]])
+```
+
+## Fetching All Results with a Loop
+
+When you need the complete history for a symbol, keep requesting pages until the API returns an empty `DataFrame`. The loop below collects every page and concatenates them into a single result:
+
+```python
+import pandas as pd
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+all_dfs = []
+offset = 0
+page_size = 100
+
+while True:
+    df = client.market_daily(symbol="000001.SZ", limit=page_size, offset=offset)
+    if df.empty:
+        break
+    all_dfs.append(df)
+    offset += page_size
+
+result = pd.concat(all_dfs, ignore_index=True)
+print(f"Fetched {len(result)} rows total")
+```
+
+<Tip>
+  Use the `start_date` and `end_date` parameters alongside `limit` and `offset` to narrow results to a specific time window before you start paging. Scoping your request to, say, a single calendar year can reduce the number of pages from dozens to just one or two, saving both time and API quota.
+</Tip>
+
+## Financial Endpoints
+
+Financial statement endpoints (`income()`, `balance_sheet()`, `cash_flow()`, `financial_indicators()`) follow the same pattern, but remember their lower default limit of `20`. Adjust `page_size` accordingly:
+
+```python
+all_dfs = []
+offset = 0
+page_size = 20
+
+while True:
+    df = client.income(symbol="000001.SZ", limit=page_size, offset=offset)
+    if df.empty:
+        break
+    all_dfs.append(df)
+    offset += page_size
+
+result = pd.concat(all_dfs, ignore_index=True)
+```
+
+<Warning>
+  Running a tight fetch-all loop against the API can exhaust your daily request quota very quickly, especially on the free tier (100 requests/day). Always add `start_date` / `end_date` filters to limit the data range, and consider adding a short `time.sleep()` between pages if you are on a paid plan with a high volume of calls. See the [Rate Limits](/rate-limits) page for per-plan quotas and best practices.
+</Warning>

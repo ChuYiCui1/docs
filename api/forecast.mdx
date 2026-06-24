@@ -1,0 +1,126 @@
+---
+title: "forecast — Earnings Forecasts (业绩预告)"
+sidebarTitle: "forecast"
+description: "Retrieve earnings forecast announcements (业绩预告) for A-share companies, including projected profit ranges, YoY change estimates, and management commentary."
+---
+
+The `forecast` method returns earnings pre-announcement records (业绩预告) that A-share companies are required to file with the CSRC when their projected annual or interim results deviate materially from the prior period or from analyst consensus. Each row represents one announcement and includes the forecast profit range (min/max), the projected year-over-year percentage change range, the prior period's parent net profit as a baseline, the forecast type (e.g. profit growth, profit decline, turnaround), and a management summary explaining the expected change.
+
+```python
+client.forecast(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `"000001.SZ"`. Omit to retrieve forecasts across all companies for the given period range.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter rows where the reporting period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter rows where the reporting period end date is on or before this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="limit" type="int" default={50}>
+  Maximum number of rows to return. Defaults to `50`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset.
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="ts_code" type="str">
+  Stock code in suffixed format, e.g. `"000001.SZ"`.
+</ResponseField>
+
+<ResponseField name="ann_date" type="date">
+  Date this forecast was publicly announced (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="end_date" type="date">
+  Reporting period this forecast covers, e.g. `"2023-12-31"` for the FY2023 annual forecast.
+</ResponseField>
+
+<ResponseField name="first_ann_date" type="date | None">
+  Date of the first (original) announcement for this forecast period. Useful for tracking subsequent revisions versus the initial disclosure.
+</ResponseField>
+
+<ResponseField name="type" type="str">
+  Forecast type classification. Common values include:
+  - `"预增"` — profit growth expected
+  - `"预减"` — profit decline expected
+  - `"扭亏"` — turnaround from loss to profit
+  - `"首亏"` — first loss expected
+  - `"续亏"` — continued loss
+  - `"略增"` / `"略减"` — slight increase / decrease
+</ResponseField>
+
+<ResponseField name="p_change_min" type="float">
+  Minimum projected YoY net profit change, as a percentage. E.g. `50.0` means at least +50%.
+</ResponseField>
+
+<ResponseField name="p_change_max" type="float">
+  Maximum projected YoY net profit change, as a percentage.
+</ResponseField>
+
+<ResponseField name="net_profit_min" type="float">
+  Minimum projected net profit attributable to parent shareholders for the period, in CNY 10,000 (万元).
+</ResponseField>
+
+<ResponseField name="net_profit_max" type="float">
+  Maximum projected net profit attributable to parent shareholders, in CNY 10,000.
+</ResponseField>
+
+<ResponseField name="last_parent_net" type="float">
+  Actual net profit attributable to parent shareholders for the same period in the prior year, in CNY 10,000. Used as the baseline for the YoY change calculation.
+</ResponseField>
+
+<ResponseField name="summary" type="str">
+  Brief management summary of the forecast, typically in Chinese. Describes the headline expectation, e.g. `"预计净利润同比增长50%-80%"`.
+</ResponseField>
+
+<ResponseField name="change_reason" type="str">
+  Management's explanation of the key drivers behind the forecast change, in Chinese.
+</ResponseField>
+
+<Note>
+  A-share listed companies are required to issue a 业绩预告 if projected annual net profit deviates by more than ±50% from the prior year, or if a significant loss or turnaround is expected. Not all companies issue quarterly forecasts — coverage is densest for annual (FY) periods.
+</Note>
+
+<Tip>
+  Filter on `type == "扭亏"` (turnaround) or large positive `p_change_min` values to build a list of potential earnings surprise candidates ahead of the reporting season.
+</Tip>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# All FY2023 forecasts announced in January 2024
+df = client.forecast(
+    start_date="2023-01-01",
+    end_date="2023-12-31",
+    limit=50,
+)
+
+# Companies expecting >100% profit growth
+big_growth = df[df["p_change_min"] > 100].sort_values("p_change_min", ascending=False)
+print(big_growth[["ts_code", "ann_date", "type", "p_change_min", "p_change_max", "summary"]])
+
+# Turnaround candidates
+turnarounds = df[df["type"] == "扭亏"]
+print(turnarounds[["ts_code", "net_profit_min", "net_profit_max", "last_parent_net"]])
+```

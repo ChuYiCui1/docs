@@ -1,0 +1,65 @@
+---
+title: "Stock Symbol Format and Exchange Codes"
+sidebarTitle: "Symbol Format"
+description: "Learn the suffixed symbol format used by AShareHub, including exchange codes for SSE and SZSE, and how to look up valid symbols."
+---
+
+Every instrument in AShareHub is identified by a suffixed symbol in the form `{code}.{exchange}` — for example, `000001.SZ`. The numeric code is the stock's official listing number, and the exchange suffix tells the API which market the instrument trades on. You must always include the suffix; a bare numeric code alone is not a valid symbol.
+
+## Exchange Suffixes
+
+AShareHub recognises three exchange suffixes across equities and FX data:
+
+| Suffix | Exchange | Example |
+|--------|----------|---------|
+| `.SH` | Shanghai Stock Exchange (SSE) | `600519.SH` — Kweichow Moutai |
+| `.SZ` | Shenzhen Stock Exchange (SZSE) | `000001.SZ` — Ping An Bank |
+| `.FXCM` | FX pairs via FXCM | `USDCNH.FXCM` |
+
+## Common Index Codes
+
+The major Chinese benchmark indices are available using the same suffixed format. Use these codes wherever a `symbol` parameter is accepted by index-related endpoints such as `client.index_daily()`.
+
+| Symbol | Index Name |
+|--------|------------|
+| `000001.SH` | SSE Composite (上证综指) |
+| `000300.SH` | CSI 300 (沪深300) |
+| `399001.SZ` | SZSE Component (深证成指) |
+| `399006.SZ` | ChiNext (创业板指) |
+| `000016.SH` | SSE 50 (上证50) |
+
+## v1 vs v2 Symbol Parameter
+
+When you use the default v2 API, the symbol field in both request parameters and response columns is called `symbol`. The legacy v1 API uses `ts_code` instead — but the underlying `{code}.{exchange}` format is identical in both versions. Regardless of which API version you target, you always pass `symbol=` in SDK method calls; the SDK handles the internal renaming automatically.
+
+<Note>
+  The v2 API returns HTTP **422 Unprocessable Entity** if the symbol you supply cannot be parsed — for example, if you omit the exchange suffix or use an unsupported suffix. Check that your code follows the `{code}.{exchange}` format exactly before retrying.
+</Note>
+
+## Looking Up Valid Symbols
+
+If you are unsure which symbol to use for a particular stock, call `client.stock_list()`. It returns a `pd.DataFrame` containing every currently listed A-share along with its name, exchange, and industry classification. You can paginate through the full universe using the standard `limit` and `offset` parameters.
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch the first 100 listed A-shares
+df = client.stock_list(limit=100, offset=0)
+print(df[["symbol", "name", "exchange"]])
+```
+
+## Requesting Multiple Symbols at Once
+
+Several endpoints — including the real-time quote endpoint — accept a comma-separated list of symbols in a single call. You can request up to 200 symbols per request this way, which is far more efficient than looping over individual calls.
+
+```python
+# Fetch real-time snapshots for two symbols in one request
+df = client.realtime(symbol="600519.SH,000001.SZ")
+print(df[["symbol", "close", "pct_chg"]])
+```
+
+<Tip>
+  Batching symbols in a single `realtime()` call counts as one API request against your daily quota, regardless of how many symbols you include (up to the 200-symbol limit). Use batching whenever you need quotes for a basket of stocks.
+</Tip>

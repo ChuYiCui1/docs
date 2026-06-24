@@ -1,0 +1,60 @@
+---
+title: "API Versions: v1 Legacy and v2 Unified"
+sidebarTitle: "Versioning"
+description: "AShareHub supports v1 (legacy Tushare-style) and v2 (unified symbol) APIs. Learn the differences and how to select a version."
+---
+
+AShareHub exposes two API versions: **v2** (the default) and **v1** (legacy). The v2 API uses a unified symbol system, returns numeric values as proper JSON numbers, and gives you consistent, predictable error codes. The v1 API preserves the Tushare-style interface — including `ts_code` response fields and decimal strings — for teams migrating existing codebases. All new projects should use v2.
+
+## v1 vs v2 at a Glance
+
+| Feature | v1 (legacy) | v2 (default) |
+|---------|-------------|--------------|
+| Symbol field in responses | `ts_code` | `symbol` |
+| Number types | Decimal strings | JSON numbers |
+| Error on unparseable code | Varies by endpoint | HTTP 422 |
+| Tushare-compatible responses | Yes | No |
+
+## Selecting a Version
+
+Pass the `version` argument to the `AShareHub` constructor. If you omit it, the client defaults to `"v2"`.
+
+```python
+from asharehub import AShareHub
+
+# Default — uses v2 (recommended for all new projects)
+client = AShareHub(api_key="ash_...")
+
+# Legacy v1 — use when you need Tushare-compatible output
+client = AShareHub(api_key="ash_...", version="v1")
+```
+
+Any value other than `"v1"` or `"v2"` raises a `ValueError` immediately, so misconfiguration is caught at initialisation time rather than at the first API call.
+
+## When to Use v1
+
+Choose v1 if you are migrating a codebase that was originally written against the [Tushare](https://tushare.pro) API. Because v1 preserves `ts_code` column names and returns numeric fields as decimal strings, your existing data-processing logic and DataFrame column references will continue to work without modification.
+
+<Warning>
+  The v1 API may be deprecated in a future release of AShareHub. If you are starting a new integration, use v2. If you are on v1 today, plan a migration to v2 so you are not affected when v1 is eventually retired.
+</Warning>
+
+## When to Use v2
+
+Use v2 for all new projects. Its advantages over v1 are:
+
+- **Numeric values** — prices, volumes, and ratios come back as JSON numbers rather than strings, so you can use them directly in calculations without casting.
+- **Consistent error handling** — an invalid or unparseable symbol always returns HTTP 422, making error handling straightforward.
+- **Unified symbol field** — every response uses `symbol` instead of `ts_code`, `index_code`, or other legacy field names.
+
+## SDK Parameters Are Always `symbol=`
+
+Regardless of which version you select, you always pass `symbol=` in your SDK method calls. The SDK translates the parameter name to the correct field (`ts_code`, `index_code`, etc.) internally before sending the request to the API.
+
+<Note>
+  You never need to change your Python code to switch versions — only the constructor argument changes. The method signatures, parameter names, and return types (all `pd.DataFrame`) are identical between v1 and v2 at the SDK level.
+</Note>
+
+## Version Behaviour Under the Hood
+
+When you instantiate the client with `version="v2"`, the `_get()` method automatically rewrites any v1 path prefix to `/v2/` and renames legacy parameter keys — for example, `ts_code` becomes `symbol` and `index_code` becomes `symbol`. This means the same method implementations serve both versions cleanly, and you benefit from the v2 improvements with zero extra effort.

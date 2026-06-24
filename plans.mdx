@@ -1,0 +1,71 @@
+---
+title: "AShareHub Plans: Free, Pro, and Business"
+sidebarTitle: "Plans"
+description: "Compare AShareHub subscription plans. Free tier includes 100 daily API calls. Pro and Business plans offer higher limits for production workloads."
+---
+
+AShareHub offers three subscription tiers so you can start exploring Chinese A-Share market data for free and scale up as your application grows. Every plan gives you access to the same full set of 38+ endpoints — the only difference between tiers is how many API requests you can make each day.
+
+## Plan Comparison
+
+| Plan | Price | Daily Request Limit |
+|------|-------|---------------------|
+| Free | $0 | 100 requests/day |
+| Pro | $49/month | 10,000 requests/day |
+| Business | $99/month | 50,000 requests/day |
+
+<Note>
+  All plans include access to every AShareHub endpoint — all 38+ data methods covering market data, financials, capital flows, indices, real-time quotes, and reference data. Your plan only governs how many requests you can make per day.
+</Note>
+
+## Plans at a Glance
+
+<CardGroup cols={3}>
+  <Card title="Free" icon="seedling">
+    **$0 / month**
+
+    100 requests per day. Perfect for exploring the API, prototyping new features, and learning the data schema before committing to a paid plan.
+
+    - All 38+ endpoints included
+    - Ideal for development and evaluation
+    - No credit card required
+  </Card>
+  <Card title="Pro" icon="bolt">
+    **$49 / month**
+
+    10,000 requests per day. Built for individual analysts, quant researchers, and small teams running scheduled data pipelines in production.
+
+    - All 38+ endpoints included
+    - Suitable for daily batch jobs and dashboards
+    - Enough headroom for most single-application workloads
+  </Card>
+  <Card title="Business" icon="building">
+    **$99 / month**
+
+    50,000 requests per day. Designed for teams and data platforms that need high-volume, reliable access to the full A-Share universe.
+
+    - All 38+ endpoints included
+    - Supports multiple services or users sharing one key
+    - Best choice for production data infrastructure
+  </Card>
+</CardGroup>
+
+## Get Started
+
+Ready to create your account? Visit the AShareHub console to sign up and generate your API key — the Free plan requires no credit card.
+
+[Create your free account →](https://asharehub.com/console/register)
+
+## Frequently Asked Questions
+
+<Accordion title="What counts as one API request?">
+  One call to any SDK method counts as one API request, regardless of how many rows the response returns. For example, calling `client.market_daily(symbol="000001.SZ", start_date="2020-01-01")` to fetch several years of daily bars still counts as a single request against your daily quota.
+</Accordion>
+
+<Accordion title="Do unused requests roll over to the next day?">
+  No. Daily request limits reset at midnight UTC every day, and any unused quota from the previous day does not carry over. If you consistently have quota left over, you may be on a larger plan than you need. If you are frequently hitting your limit, consider upgrading to the next tier.
+</Accordion>
+
+<Accordion title="How do I upgrade my plan?">
+  You can view your current usage and change your subscription at any time by visiting [asharehub.com/console](https://asharehub.com/console). Upgrades take effect immediately, so your new daily limit is available as soon as your payment is processed.
+</Accordion>

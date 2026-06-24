@@ -1,0 +1,95 @@
+---
+title: "trade_calendar — SSE and SZSE Trading Calendar"
+sidebarTitle: "Trade Calendar"
+description: "Query the official trading calendar for the Shanghai and Shenzhen exchanges, including open/closed days and the previous trading day for any date."
+---
+
+The `trade_calendar()` method returns the official exchange trading calendar for the Shanghai Stock Exchange (SSE) and the Shenzhen Stock Exchange (SZSE). Each row represents one calendar day and indicates whether the market was open, along with the most recent prior trading day. This is especially useful for aligning date ranges in backtests, scheduling data pulls, or determining the correct settlement date for any given calendar date.
+
+```python
+df = client.trade_calendar(
+    exchange: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    is_open: Optional[int] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="exchange" type="str" optional>
+  Exchange to query. Use `"SSE"` for Shanghai or `"SZSE"` for Shenzhen. Omit to retrieve both exchanges simultaneously.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range (inclusive) in `YYYY-MM-DD` format, e.g. `"2024-01-01"`.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range (inclusive) in `YYYY-MM-DD` format, e.g. `"2024-12-31"`.
+</ParamField>
+
+<ParamField query="is_open" type="int" optional>
+  Filter rows by market-open status. Pass `1` to return trading days only, or `0` to return non-trading days (weekends and public holidays) only. Omit for all calendar days.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return per request. Set this higher (e.g. `300`) when retrieving a full year of trading days in one call.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Zero-based row offset for pagination.
+</ParamField>
+
+## Response Fields
+
+The method returns a `pd.DataFrame` where each row represents one calendar day. Field definitions follow the `TradeCalendar` model.
+
+<ResponseField name="exchange" type="str">
+  Exchange identifier: `"SSE"` (Shanghai Stock Exchange) or `"SZSE"` (Shenzhen Stock Exchange).
+</ResponseField>
+
+<ResponseField name="cal_date" type="date">
+  The calendar date for this row (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="is_open" type="int">
+  Market open indicator: `1` = trading day, `0` = non-trading day (weekend or public holiday).
+</ResponseField>
+
+<ResponseField name="pretrade_date" type="date">
+  The most recent trading day that preceded `cal_date`. Useful for lookback calculations that must land on a valid settlement date.
+</ResponseField>
+
+## Example Usage
+
+The snippet below retrieves every SSE trading day in 2024 with a single request and builds a list of valid trading dates.
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Fetch all open trading days for SSE in 2024
+df = client.trade_calendar(
+    exchange="SSE",
+    start_date="2024-01-01",
+    end_date="2024-12-31",
+    is_open=1,
+    limit=300,
+)
+trading_days = df["cal_date"].tolist()
+print(f"SSE trading days in 2024: {len(trading_days)}")
+print("First 5:", trading_days[:5])
+
+# Find the previous trading day for a given date
+holiday = "2024-10-01"   # National Day — market closed
+row = client.trade_calendar(
+    exchange="SSE",
+    start_date=holiday,
+    end_date=holiday,
+)
+print("Previous trading day:", row["pretrade_date"].iloc[0])
+```

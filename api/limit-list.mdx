@@ -1,0 +1,156 @@
+---
+title: "limit_list — Daily Limit-Up and Limit-Down Stocks"
+sidebarTitle: "limit_list"
+description: "Fetch the daily list of stocks that hit their limit-up (涨停) or limit-down (跌停) price circuit breaker on Chinese A-share exchanges."
+---
+
+`limit_list` retrieves every stock that triggered its daily price circuit breaker — either limit-up (涨停, +10% or +20% for STAR/ChiNext) or limit-down (跌停, −10%) — on Chinese A-share exchanges. Each row includes the closing price, total turnover, the market capitalisation locked at the limit, the times the limit was broken intraday (`open_times`), and exactly when the stock first and last hit its ceiling or floor during the session. This data is widely used for momentum and sentiment analysis in the A-share market.
+
+```python
+df = client.limit_list(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit_type="U",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to retrieve all limit-hitting stocks.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit_type" type="str" optional>
+  Filter by circuit-breaker direction:
+  - `"U"` — limit-up stocks only (涨停)
+  - `"D"` — limit-down stocks only (跌停)
+  - Omit this parameter to return both directions.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `LimitList` model and represents one stock that hit its price limit on one trading day.
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="industry" type="str">
+  Shenwan Level-1 industry classification of the stock.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Short Chinese name of the security.
+</ResponseField>
+
+<ResponseField name="close" type="float">
+  Closing price, in CNY. For a sealed limit-up, this equals the limit price.
+</ResponseField>
+
+<ResponseField name="pct_chg" type="float">
+  Percentage price change for the day (e.g. `10.01` means +10.01%).
+</ResponseField>
+
+<ResponseField name="amount" type="float">
+  Total trading turnover for the day, in thousands of CNY (千元).
+</ResponseField>
+
+<ResponseField name="limit_amount" type="float">
+  Amount of orders locked at the limit price (封板资金), in thousands of CNY. Higher values indicate a stronger seal.
+</ResponseField>
+
+<ResponseField name="float_mv" type="float">
+  Circulating (float) market capitalisation, in 万元.
+</ResponseField>
+
+<ResponseField name="total_mv" type="float">
+  Total market capitalisation, in 万元.
+</ResponseField>
+
+<ResponseField name="turnover_ratio" type="float">
+  Daily turnover ratio as a percentage of float shares.
+</ResponseField>
+
+<ResponseField name="fd_amount" type="float">
+  First-time locked amount at the limit (首次封板资金), in thousands of CNY.
+</ResponseField>
+
+<ResponseField name="first_time" type="str">
+  Time the stock first hit its price limit during the session, formatted as `HH:MM:SS`.
+</ResponseField>
+
+<ResponseField name="last_time" type="str">
+  Time of the last limit seal during the session, formatted as `HH:MM:SS`. If equal to `"14:57:00"` or later, the limit was held into the close.
+</ResponseField>
+
+<ResponseField name="open_times" type="int">
+  Number of times the limit was broken (板子打开) intraday. `0` means the limit was sealed all day.
+</ResponseField>
+
+<ResponseField name="up_stat" type="str">
+  Consecutive limit-up streak status, e.g. `"1/1"` (first limit-up in a 1-day streak) or `"3/5"` (three limit-ups in the last five days).
+</ResponseField>
+
+<ResponseField name="limit_times" type="int">
+  Number of consecutive trading days the stock has been at its limit (连板数).
+</ResponseField>
+
+<ResponseField name="limit" type="str">
+  Direction indicator: `"U"` for limit-up (涨停) or `"D"` for limit-down (跌停).
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# All limit-up stocks on a specific date
+df_up = client.limit_list(
+    start_date="2024-03-15",
+    end_date="2024-03-15",
+    limit_type="U",
+    limit=200,
+)
+print(df_up[["ts_code", "name", "industry", "limit_times", "open_times", "limit_amount"]])
+
+# Stocks with consecutive limit-up streaks of 3+ days
+strong = df_up[df_up["limit_times"] >= 3].sort_values("limit_times", ascending=False)
+print(strong[["ts_code", "name", "limit_times", "up_stat", "first_time"]])
+
+# Limit-down stocks for a date range
+df_down = client.limit_list(
+    start_date="2024-01-01",
+    end_date="2024-01-31",
+    limit_type="D",
+    limit=500,
+)
+```
+
+<Tip>
+  A low `open_times` value combined with a high `limit_amount` and an early `first_time` indicates a strong, sealed limit-up — a common signal watched by A-share momentum traders.
+</Tip>

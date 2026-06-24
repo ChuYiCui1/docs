@@ -1,0 +1,142 @@
+---
+title: "dividend — Dividends and Bonus Shares"
+sidebarTitle: "dividend"
+description: "Retrieve dividend and bonus share distribution records for A-share companies, including cash dividend amounts, stock bonus rates, and key corporate action dates."
+---
+
+The `dividend` method returns cash dividend and bonus share (分红送股) distribution records for A-share listed companies. Each row represents one distribution event tied to a specific reporting period and includes the cash dividend per share (before and after tax), bonus share rates, key corporate action dates (record date, ex-dividend date, payment date, listing date for bonus shares), and the approval status of the distribution plan. For quick earnings reports without the full distribution details, you can also use the related `express` method.
+
+```python
+client.dividend(
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> pd.DataFrame
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `"600519.SH"`. Omit to retrieve distribution records across multiple companies.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Filter rows where the reporting period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Filter rows where the reporting period end date is on or before this value (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="limit" type="int" default={50}>
+  Maximum number of rows to return. Defaults to `50`.
+</ParamField>
+
+<ParamField query="offset" type="int" default={0}>
+  Zero-based pagination offset.
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="ts_code" type="str">
+  Stock code in suffixed format, e.g. `"600519.SH"`.
+</ResponseField>
+
+<ResponseField name="end_date" type="date">
+  Reporting period that this distribution relates to, e.g. `"2023-12-31"` for the FY2023 annual dividend.
+</ResponseField>
+
+<ResponseField name="ann_date" type="date | None">
+  Date the distribution plan was publicly announced (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="div_proc" type="str">
+  Current approval status of the distribution plan. Common values: `"预案"` (proposed), `"股东大会"` (AGM approved), `"实施"` (implemented/paid), `"重要事项提示"` (notice only).
+</ResponseField>
+
+<ResponseField name="stk_div" type="float">
+  Number of bonus shares issued per 10 shares held (每10股送红股数), e.g. `3.0` means 3 bonus shares per 10 held.
+</ResponseField>
+
+<ResponseField name="stk_bo_rate" type="float">
+  Capitalisation / stock dividend rate (每10股转增股数) — shares issued from capital reserve per 10 held.
+</ResponseField>
+
+<ResponseField name="stk_co_rate" type="float">
+  Share consolidation rate (缩股比例), where applicable.
+</ResponseField>
+
+<ResponseField name="cash_div" type="float">
+  Pre-tax cash dividend per 10 shares (每10股派现金额税前), in CNY.
+</ResponseField>
+
+<ResponseField name="cash_div_tax" type="float">
+  After-tax cash dividend per 10 shares (每10股派现金额税后), in CNY.
+</ResponseField>
+
+<ResponseField name="record_date" type="date | None">
+  Shareholder record date (股权登记日) — you must hold the stock on this date to receive the dividend.
+</ResponseField>
+
+<ResponseField name="ex_date" type="date | None">
+  Ex-dividend date (除权除息日) — the first trading day on which the stock trades without the right to the declared dividend.
+</ResponseField>
+
+<ResponseField name="pay_date" type="date | None">
+  Cash dividend payment date (现金红利发放日).
+</ResponseField>
+
+<ResponseField name="div_listdate" type="date | None">
+  Listing date for newly issued bonus shares (红股上市日).
+</ResponseField>
+
+<ResponseField name="imp_ann_date" type="date | None">
+  Date of the implementation announcement (实施公告日) — when the company formally announces the dividend will be paid.
+</ResponseField>
+
+<Note>
+  Chinese A-share dividends are expressed **per 10 shares** (每10股), not per single share. Divide `cash_div` by 10 to get the per-share amount. For example, `cash_div = 20.0` means ¥2.00 per share.
+</Note>
+
+<Tip>
+  **Related endpoint — express (业绩快报):** For a quick earnings summary before the full report is filed, use `client.express()`:
+
+  ```python
+  df = client.express(symbol="000001.SZ", limit=20)
+  ```
+
+  The `express` endpoint returns preliminary revenue, profit, EPS, and ROE figures that companies publish ahead of their full financial statements.
+</Tip>
+
+## Example
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Historical dividend records for Kweichow Moutai
+df = client.dividend(
+    symbol="600519.SH",
+    start_date="2018-01-01",
+    end_date="2023-12-31",
+    limit=50,
+)
+
+# Only show implemented distributions with confirmed ex-dates
+implemented = df[df["div_proc"] == "实施"].copy()
+
+# Per-share cash dividend (pre-tax)
+implemented["cash_div_per_share"] = implemented["cash_div"] / 10
+
+print(implemented[[
+    "end_date",
+    "ex_date",
+    "pay_date",
+    "cash_div_per_share",
+    "stk_div",
+    "stk_bo_rate",
+]])
+```

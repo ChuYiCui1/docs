@@ -1,0 +1,124 @@
+---
+title: "margin — Margin Trading Balances (融资融券)"
+sidebarTitle: "margin"
+description: "Retrieve daily margin trading details including long balance (融资余额), short balance (融券余额), and related metrics for A-share stocks."
+---
+
+`margin` returns daily margin trading statistics for Chinese A-share stocks eligible for the 融资融券 (margin financing and securities lending) programme. Each row covers the outstanding margin-long balance, short-sell balance, margin buy amount, securities returned, and the combined total balance for a stock on a given trading day. This data reflects the aggregate leveraged positioning of retail and institutional participants and is widely used as a sentiment and flow indicator.
+
+```python
+df = client.margin(
+    symbol="000001.SZ",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+    limit=100,
+    offset=0,
+)
+```
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Stock code in suffixed format, e.g. `000001.SZ`. Omit to retrieve data across all margin-eligible stocks.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  End of the date range in `YYYY-MM-DD` format. Inclusive.
+</ParamField>
+
+<ParamField query="limit" type="int" default="100">
+  Maximum number of rows to return.
+</ParamField>
+
+<ParamField query="offset" type="int" default="0">
+  Number of rows to skip before returning results. Use with `limit` to paginate.
+</ParamField>
+
+## Response Fields
+
+Each row maps to the `MarginDetail` model and represents one stock's margin trading summary for one trading day.
+
+<ResponseField name="trade_date" type="date">
+  Trading date in `YYYY-MM-DD` format.
+</ResponseField>
+
+<ResponseField name="ts_code" type="str">
+  Suffixed stock code, e.g. `000001.SZ`.
+</ResponseField>
+
+<ResponseField name="name" type="str">
+  Short Chinese name of the security.
+</ResponseField>
+
+<ResponseField name="rzye" type="float">
+  **融资余额** — Outstanding margin long balance (total CNY lent by brokers for long purchases), in CNY.
+</ResponseField>
+
+<ResponseField name="rqye" type="float">
+  **融券余额** — Outstanding short-sell balance (market value of shares borrowed and sold short), in CNY.
+</ResponseField>
+
+<ResponseField name="rzmre" type="float">
+  **融资买入额** — Margin buy amount for the day (new margin purchases), in CNY.
+</ResponseField>
+
+<ResponseField name="rqyl" type="float">
+  **融券余量** — Outstanding short-sell volume (shares still on loan), in shares.
+</ResponseField>
+
+<ResponseField name="rzche" type="float">
+  **融资偿还额** — Margin repayment amount for the day (loans repaid), in CNY.
+</ResponseField>
+
+<ResponseField name="rqchl" type="float">
+  **融券偿还量** — Short-sell return volume for the day (shares returned to lender), in shares.
+</ResponseField>
+
+<ResponseField name="rqmcl" type="float">
+  **融券卖出量** — Short-sell sell volume for the day (new shares borrowed and sold), in shares.
+</ResponseField>
+
+<ResponseField name="rzrqye" type="float">
+  **融资融券余额** — Combined total balance (融资余额 + 融券余额), in CNY. This is the headline margin balance figure.
+</ResponseField>
+
+## Example Usage
+
+```python
+from asharehub import AShareHub
+
+client = AShareHub(api_key="ash_...")
+
+# Daily margin balance for CITIC Securities over one quarter
+df = client.margin(
+    symbol="600030.SH",
+    start_date="2024-01-01",
+    end_date="2024-03-31",
+)
+print(df[["trade_date", "rzye", "rqye", "rzmre", "rzrqye"]])
+
+# Stocks with the largest margin long balance on a given date
+df_all = client.margin(
+    start_date="2024-06-03",
+    end_date="2024-06-03",
+    limit=500,
+)
+top_long = df_all.nlargest(10, "rzye")[["ts_code", "name", "rzye", "rzmre", "rzrqye"]]
+print(top_long)
+
+# Track net margin flow (buy minus repay) as a momentum signal
+df["net_rz_flow"] = df["rzmre"] - df["rzche"]
+print(df[["trade_date", "rzye", "net_rz_flow"]])
+```
+
+<Note>
+  Only stocks on the official margin-eligible list (融资融券标的) appear in this endpoint. The eligible list is updated periodically by SSE and SZSE.
+</Note>
+
+<Tip>
+  A rising `rzye` (margin long balance) alongside a rising price suggests leveraged conviction; a rising `rzye` with a falling price may indicate trapped longs and potential forced-liquidation risk.
+</Tip>
