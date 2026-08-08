@@ -4,15 +4,13 @@ sidebarTitle: "adj_factor"
 description: "Retrieve daily adjustment factors used to compute backward or forward-adjusted historical prices for Chinese A-share stocks after corporate actions."
 ---
 
-`adj_factor` returns the cumulative price-adjustment multiplier for each trading day of a Chinese A-share stock. Adjustment factors change whenever a corporate action — such as a cash dividend, stock split, rights issue, or bonus share distribution — alters the stock's comparable price series. You can use this endpoint to reconstruct either backward-adjusted (后复权) or forward-adjusted (前复权) price series from the raw OHLCV data returned by [`market_daily`](/api/market-daily).
+`adj_factor` returns the cumulative price-adjustment multiplier for each trading day of a Chinese A-share stock. Adjustment factors change whenever a corporate action — such as a cash dividend, stock split, rights issue, or bonus share distribution — alters the stock's comparable price series. Combine these factors with the raw OHLCV data returned by [`market_daily`](/api/market-daily) to calculate forward-adjusted (前复权) or backward-adjusted (后复权) prices.
 
 ```python
 df = client.adj_factor(
     symbol="000001.SZ",
-    start_date="2020-01-01",
-    end_date="2024-12-31",
-    limit=100,
-    offset=0,
+    start_date="20200101",
+    end_date="20241231",
 )
 ```
 
@@ -23,31 +21,27 @@ df = client.adj_factor(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+  Start of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Inclusive.
+  End of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
 
 Each row maps to the `AdjFactor` model and represents the adjustment factor effective on one trading day for one stock.
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `000001.SZ`.
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date in `YYYY-MM-DD` format.
+  Trading date in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="adj_factor" type="float">
@@ -62,40 +56,49 @@ import pandas as pd
 
 client = AShareHub(api_key="ash_...")
 
-# Fetch adjustment factors for the full history of ICBC
-adj = client.adj_factor(symbol="601398.SH", limit=5000)
-daily = client.market_daily(symbol="601398.SH", limit=5000)
+# Choose the adjustment anchor explicitly. Here T is the last trading day on
+# or before 20241231.
+daily = client.market_daily(
+    symbol="601398.SH", start_date="20200101", end_date="20241231"
+)
+adj = client.adj_factor(
+    symbol="601398.SH", start_date="20200101", end_date="20241231"
+)
 
-# Merge on trade_date
-merged = daily.merge(adj[["trade_date", "adj_factor"]], on="trade_date")
+merged = daily.merge(adj, on=["symbol", "trade_date"], how="inner")
+merged = merged.sort_values("trade_date")
+anchor_factor = merged.iloc[-1]["adj_factor"]
 
-# Compute backward-adjusted (后复权) close
-latest_factor = merged["adj_factor"].iloc[0]          # most recent factor
-merged["close_hfq"] = merged["close"] * merged["adj_factor"] / latest_factor
-
-# Compute forward-adjusted (前复权) close
-earliest_factor = merged["adj_factor"].iloc[-1]       # earliest factor
-merged["close_qfq"] = merged["close"] * merged["adj_factor"] / earliest_factor
+merged["close_qfq"] = merged["close"] * merged["adj_factor"] / anchor_factor
+merged["close_hfq"] = merged["close"] * merged["adj_factor"]
 
 print(merged[["trade_date", "close", "close_hfq", "close_qfq"]].head(10))
 ```
 
 <Note>
-  To compute a **backward-adjusted** price series (后复权), use the formula:
+  Let `P(t)` be an unadjusted price and `F(t)` its adjustment factor. Choose an anchor trading date `T`. Use the last trading day on or before your target `end_date`; when you omit `end_date`, use the latest available trading day.
+
+  To compute a **forward-adjusted** price series (前复权), use:
 
   ```
-  adjusted_close = close × adj_factor / latest_adj_factor
+  qfq(t) = P(t) × F(t) / F(T)
   ```
 
-  To compute a **forward-adjusted** price series (前复权), divide by the earliest (base) factor instead:
+  This guarantees `qfq(T) = P(T)`. The same historical date can therefore have a different forward-adjusted price when you choose a different anchor.
+
+  To compute a **backward-adjusted** price series (后复权), use:
 
   ```
-  adjusted_close = close × adj_factor / earliest_adj_factor
+  hfq(t) = P(t) × F(t)
   ```
 
   The `technical_factors` endpoint returns pre-computed `_hfq` and `_qfq` series if you prefer not to calculate these yourself.
 </Note>
 
 <Tip>
-  Adjustment factors are delivered in **reverse chronological order** by default (newest first). Sort ascending by `trade_date` before applying the formula to avoid off-by-one errors.
+  Apply the same formulas to `open`, `high`, `low`, and `close`. Do not adjust `vol` or `amount`. Do not use the last row of a truncated response as the anchor unless it is actually date `T`.
 </Tip>
+
+<Warning>
+  Pre-computed `_qfq` fields are snapshots anchored to the latest trading day available when the source refreshed that record. Calculate from raw daily prices and `adj_factor` when you need a historical anchor or strict reproducibility. Recompute cached forward-adjusted series after a new corporate action or factor correction.
+</Warning>

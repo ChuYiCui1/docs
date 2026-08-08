@@ -9,10 +9,8 @@ description: "Get technical indicators and adjusted prices for A-share stocks, i
 ```python
 df = client.technical_factors(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=100,
-    offset=0,
+    start_date="20240101",
+    end_date="20240331",
 )
 ```
 
@@ -23,19 +21,15 @@ df = client.technical_factors(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+  Start of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Inclusive.
+  End of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -156,12 +150,12 @@ Each row maps to the `StkFactor` model and represents one stock on one trading d
 
 ### Identifiers
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `000001.SZ`.
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date in `YYYY-MM-DD` format.
+  Trading date in `YYYYMMDD` format.
 </ResponseField>
 
 ## Example Usage
@@ -174,16 +168,20 @@ client = AShareHub(api_key="ash_...")
 # Fetch technical factors for Ping An Bank over one quarter
 df = client.technical_factors(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
+    start_date="20240101",
+    end_date="20240331",
 )
 print(df[["trade_date", "close_qfq", "macd", "rsi_6", "kdj_k", "boll_upper", "boll_lower"]])
 
 # Use the pro endpoint for 200+ indicators
-df_pro = client.technical_factors_pro(symbol="000001.SZ", limit=100)
+df_pro = client.technical_factors_pro(symbol="000001.SZ")
 print(df_pro.columns.tolist())
 ```
 
 <Tip>
   Use `close_qfq` (forward-adjusted close) for chart rendering so that historical prices visually account for splits and dividends. Use `close_hfq` when computing returns or factor signals to avoid look-ahead bias.
 </Tip>
+
+<Warning>
+  The `*_qfq` fields are source-precomputed snapshots anchored to the latest trading day available when each record was last refreshed. Use raw prices with [`adj_factor`](/api/adj-factor) when you need a historical anchor or strict reproducibility.
+</Warning>
