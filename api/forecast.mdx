@@ -40,7 +40,7 @@ client.forecast(
 
 ## Response Fields
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Stock code in suffixed format, e.g. `"000001.SZ"`.
 </ResponseField>
 
@@ -118,9 +118,9 @@ df = client.forecast(
 
 # Companies expecting >100% profit growth
 big_growth = df[df["p_change_min"] > 100].sort_values("p_change_min", ascending=False)
-print(big_growth[["ts_code", "ann_date", "type", "p_change_min", "p_change_max", "summary"]])
+print(big_growth[["symbol", "ann_date", "type", "p_change_min", "p_change_max", "summary"]])
 
 # Turnaround candidates
 turnarounds = df[df["type"] == "扭亏"]
-print(turnarounds[["ts_code", "net_profit_min", "net_profit_max", "last_parent_net"]])
+print(turnarounds[["symbol", "net_profit_min", "net_profit_max", "last_parent_net"]])
 ```

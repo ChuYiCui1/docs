@@ -36,8 +36,8 @@ df = client.stock_list(
 
 The method returns a `pd.DataFrame` where each row corresponds to one stock. Field definitions follow the `StockBasic` model.
 
-<ResponseField name="ts_code" type="str">
-  Suffixed Tushare-style stock code, e.g. `"600519.SH"` or `"000001.SZ"`.
+<ResponseField name="symbol" type="str">
+  Suffixed stock code, e.g. `"600519.SH"` or `"000001.SZ"`.
 </ResponseField>
 
 <ResponseField name="symbol" type="str">
@@ -124,5 +124,5 @@ print(f"Total stocks retrieved: {len(universe)}")
 sse_listed = universe[
     (universe["list_status"] == "L") & (universe["exchange"] == "SSE")
 ]
-print(sse_listed[["ts_code", "name", "market", "industry"]].head(10))
+print(sse_listed[["symbol", "name", "market", "industry"]].head(10))
 ```

@@ -36,7 +36,7 @@ df = client.realtime(
 
 Each row maps to the `RealtimeQuote` model and represents one stock's latest quote at the time of the API call.
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `000001.SZ`.
 </ResponseField>
 
@@ -89,12 +89,12 @@ client = AShareHub(api_key="ash_...")
 
 # Snapshot for a single stock
 df = client.realtime(symbol="600519.SH")
-print(df[["ts_code", "name", "price", "pct_chg", "trade_time"]])
+print(df[["symbol", "name", "price", "pct_chg", "trade_time"]])
 
 # Basket quote for multiple stocks at once
 basket = "600519.SH,000858.SZ,601318.SH,000001.SZ"
 df_basket = client.realtime(symbol=basket)
-print(df_basket[["ts_code", "name", "price", "pct_chg", "volume"]])
+print(df_basket[["symbol", "name", "price", "pct_chg", "volume"]])
 
 # Page through all tradable stocks
 import pandas as pd
@@ -109,7 +109,7 @@ while True:
 
 market = pd.concat(frames, ignore_index=True)
 # Top 10 gainers right now
-top_gainers = market.nlargest(10, "pct_chg")[["ts_code", "name", "price", "pct_chg"]]
+top_gainers = market.nlargest(10, "pct_chg")[["symbol", "name", "price", "pct_chg"]]
 print(top_gainers)
 ```
 

@@ -42,7 +42,7 @@ df = client.holder_trade(
 
 Each row maps to the `HolderTrade` model and represents one major-shareholder trade disclosure.
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code of the company whose shares were traded, e.g. `000001.SZ`.
 </ResponseField>
 
@@ -112,11 +112,11 @@ df_all = client.holder_trade(
     limit=500,
 )
 reductions = df_all[df_all["in_de"] == "DE"].sort_values("change_vol", ascending=False)
-print(reductions[["ts_code", "holder_name", "holder_type", "change_vol", "avg_price"]].head(20))
+print(reductions[["symbol", "holder_name", "holder_type", "change_vol", "avg_price"]].head(20))
 
 # State-owned shareholder increases only
 soe_buys = df_all[(df_all["in_de"] == "IN") & (df_all["holder_type"] == "G")]
-print(soe_buys[["ts_code", "holder_name", "change_vol", "after_ratio"]])
+print(soe_buys[["symbol", "holder_name", "change_vol", "after_ratio"]])
 ```
 
 <Note>

@@ -36,7 +36,7 @@ df = client.industry_list(
 
 The method returns a `pd.DataFrame` where each row maps one stock to its Shenwan industry classification. Field definitions follow the `IndustryClassification` model.
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `"600519.SH"`.
 </ResponseField>
 
@@ -99,15 +99,15 @@ classifications = pd.concat(all_rows, ignore_index=True)
 # Count stocks per Level 1 sector
 sector_counts = (
     classifications
-    .groupby(["l1_code", "l1_name"])["ts_code"]
+    .groupby(["l1_code", "l1_name"])["symbol"]
     .count()
     .reset_index()
-    .rename(columns={"ts_code": "stock_count"})
+    .rename(columns={"symbol": "stock_count"})
     .sort_values("stock_count", ascending=False)
 )
 print(sector_counts.head(10))
 
 # Look up the full classification for a single stock
 single = client.industry_list(symbol="600519.SH")
-print(single[["ts_code", "name", "l1_name", "l2_name", "l3_name"]])
+print(single[["symbol", "name", "l1_name", "l2_name", "l3_name"]])
 ```

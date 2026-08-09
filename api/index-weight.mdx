@@ -4,7 +4,7 @@ sidebarTitle: "Index Weight"
 description: "Retrieve the constituent stocks and their weights for major Chinese market indices including CSI 300 and SZSE Component at any historical date."
 ---
 
-The `index_weight()` method returns the constituent stocks of a Chinese equity index along with each stock's weight in that index as of a given trading date. You can use this data to replicate index holdings, measure factor exposure relative to a benchmark, or track historical rebalancing events. The `symbol` parameter maps internally to the `index_code` field in the response, so the same suffixed-code convention applies.
+The `index_weight()` method returns the constituent stocks of a Chinese equity index along with each stock's weight in that index as of a given trading date. You can use this data to replicate index holdings, measure factor exposure relative to a benchmark, or track historical rebalancing events. The parent index is returned as `symbol`, and each constituent stock is returned as `con_symbol`.
 
 ```python
 df = client.index_weight(
@@ -19,7 +19,7 @@ df = client.index_weight(
 ## Parameters
 
 <ParamField query="symbol" type="str" optional>
-  Suffixed index code identifying the index whose constituents you want to retrieve, e.g. `"000300.SH"` for CSI 300 or `"399001.SZ"` for SZSE Component. Stored as `index_code` in the response.
+  Suffixed index code identifying the index whose constituents you want to retrieve, e.g. `"000300.SH"` for CSI 300 or `"399001.SZ"` for SZSE Component. Returned as `symbol` in the response.
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
@@ -42,7 +42,7 @@ df = client.index_weight(
 
 The method returns a `pd.DataFrame` where each row represents one constituent stock's weight in the index on a given trading date. Field definitions follow the `IndexWeight` model.
 
-<ResponseField name="index_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed code of the parent index, e.g. `"000300.SH"`. This is the value passed via the `symbol` parameter.
 </ResponseField>
 
@@ -50,7 +50,7 @@ The method returns a `pd.DataFrame` where each row represents one constituent st
   The date as of which this constituent weight applies (`YYYY-MM-DD`).
 </ResponseField>
 
-<ResponseField name="con_code" type="str">
+<ResponseField name="con_symbol" type="str">
   Suffixed stock code of the constituent, e.g. `"600519.SH"`.
 </ResponseField>
 
@@ -65,7 +65,7 @@ The method returns a `pd.DataFrame` where each row represents one constituent st
 ## Example Usage
 
 <Note>
-  The `symbol` parameter you pass maps to `index_code` in the API response. You query *by* index code, and the response echoes it back as `index_code`.
+  The `symbol` parameter identifies the parent index, and the response echoes it as `symbol`. Constituent stocks use `con_symbol`.
 </Note>
 
 ```python
@@ -80,7 +80,7 @@ csi300_weights = client.index_weight(
     limit=300,
 )
 print(f"Constituents returned: {len(csi300_weights)}")
-print(csi300_weights[["con_code", "con_name", "weight"]].head(10))
+print(csi300_weights[["con_symbol", "con_name", "weight"]].head(10))
 
 # Verify weights sum to ~100%
 total_weight = csi300_weights["weight"].sum()
@@ -96,6 +96,6 @@ szse_hist = client.index_weight(
 # Identify the most recent snapshot date
 latest_date = szse_hist["trade_date"].max()
 snapshot = szse_hist[szse_hist["trade_date"] == latest_date]
-top10 = snapshot.nlargest(10, "weight")[["con_code", "con_name", "weight"]]
+top10 = snapshot.nlargest(10, "weight")[["con_symbol", "con_name", "weight"]]
 print(top10)
 ```

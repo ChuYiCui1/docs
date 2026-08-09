@@ -50,7 +50,7 @@ df = client.limit_list(
 
 Each row maps to the `LimitList` model and represents one stock that hit its price limit on one trading day.
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `000001.SZ`.
 </ResponseField>
 
@@ -136,11 +136,11 @@ df_up = client.limit_list(
     limit_type="U",
     limit=200,
 )
-print(df_up[["ts_code", "name", "industry", "limit_times", "open_times", "limit_amount"]])
+print(df_up[["symbol", "name", "industry", "limit_times", "open_times", "limit_amount"]])
 
 # Stocks with consecutive limit-up streaks of 3+ days
 strong = df_up[df_up["limit_times"] >= 3].sort_values("limit_times", ascending=False)
-print(strong[["ts_code", "name", "limit_times", "up_stat", "first_time"]])
+print(strong[["symbol", "name", "limit_times", "up_stat", "first_time"]])
 
 # Limit-down stocks for a date range
 df_down = client.limit_list(

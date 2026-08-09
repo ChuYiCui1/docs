@@ -46,7 +46,7 @@ Each row maps to the `MarginDetail` model and represents one stock's margin trad
   Trading date in `YYYY-MM-DD` format.
 </ResponseField>
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `000001.SZ`.
 </ResponseField>
 
@@ -107,7 +107,7 @@ df_all = client.margin(
     end_date="2024-06-03",
     limit=500,
 )
-top_long = df_all.nlargest(10, "rzye")[["ts_code", "name", "rzye", "rzmre", "rzrqye"]]
+top_long = df_all.nlargest(10, "rzye")[["symbol", "name", "rzye", "rzmre", "rzrqye"]]
 print(top_long)
 
 # Track net margin flow (buy minus repay) as a momentum signal

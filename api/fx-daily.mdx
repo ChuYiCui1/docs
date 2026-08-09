@@ -42,8 +42,8 @@ df = client.fx_daily(
 
 The method returns a `pd.DataFrame` where each row represents one currency pair's daily data. Field definitions follow the `FxDaily` model.
 
-<ResponseField name="ts_code" type="str">
-  Currency pair code as stored in the database, e.g. `"USDCNH.FXCM"`.
+<ResponseField name="symbol" type="str">
+  Suffixed currency pair code, e.g. `"USDCNH.FXCM"`.
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">

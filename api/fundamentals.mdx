@@ -42,7 +42,7 @@ df = client.fundamentals(
 
 Each row maps to the `Fundamentals` model and represents one stock on one trading day.
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `600519.SH`.
 </ResponseField>
 
@@ -132,7 +132,7 @@ df_all = client.fundamentals(
     limit=500,
 )
 low_pe = df_all[df_all["pe_ttm"] < 10].sort_values("pe_ttm")
-print(low_pe[["ts_code", "pe_ttm", "pb", "total_mv"]])
+print(low_pe[["symbol", "pe_ttm", "pb", "total_mv"]])
 ```
 
 <Note>

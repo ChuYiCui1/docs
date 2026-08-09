@@ -42,7 +42,7 @@ df = client.block_trade(
 
 Each row maps to the `BlockTrade` model and represents a single block trade transaction.
 
-<ResponseField name="ts_code" type="str">
+<ResponseField name="symbol" type="str">
   Suffixed stock code of the traded security, e.g. `000001.SZ`.
 </ResponseField>
 
@@ -91,7 +91,7 @@ df_all = client.block_trade(
     end_date="2024-06-03",
     limit=200,
 )
-largest = df_all.nlargest(10, "amount")[["ts_code", "price", "vol", "amount", "buyer", "seller"]]
+largest = df_all.nlargest(10, "amount")[["symbol", "price", "vol", "amount", "buyer", "seller"]]
 print(largest)
 
 # Find all trades involving a specific brokerage seat as buyer
