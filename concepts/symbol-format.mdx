@@ -1,20 +1,24 @@
 ---
 title: "Stock Symbol Format and Exchange Codes"
 sidebarTitle: "Symbol Format"
-description: "Learn the suffixed symbol format used by AShareHub, including exchange codes for SSE and SZSE, and how to look up valid symbols."
+description: "Learn the suffixed symbol format used by AShareHub, including SSE, SZSE, BSE, and Hong Kong exchange codes."
 ---
 
 Every instrument in AShareHub is identified by a suffixed symbol in the form `{code}.{exchange}` — for example, `000001.SZ`. The numeric code is the stock's official listing number, and the exchange suffix tells the API which market the instrument trades on. You must always include the suffix; a bare numeric code alone is not a valid symbol.
 
 ## Exchange Suffixes
 
-AShareHub recognises three exchange suffixes across equities and FX data:
+AShareHub recognises the following common exchange suffixes across equities and FX data:
 
 | Suffix | Exchange | Example |
 |--------|----------|---------|
 | `.SH` | Shanghai Stock Exchange (SSE) | `600519.SH` — Kweichow Moutai |
 | `.SZ` | Shenzhen Stock Exchange (SZSE) | `000001.SZ` — Ping An Bank |
+| `.BJ` | Beijing Stock Exchange (BSE) | `430047.BJ` |
+| `.HK` | Hong Kong Exchanges and Clearing (HKEX) | `00700.HK` — Tencent |
 | `.FXCM` | FX pairs via FXCM | `USDCNH.FXCM` |
+
+Hong Kong equity codes are five digits before the suffix. Leading zeroes are significant: use `00700.HK`, not `700.HK`.
 
 ## Common Index Codes
 
@@ -30,7 +34,9 @@ The major Chinese benchmark indices are available using the same suffixed format
 
 ## v1 vs v2 Symbol Parameter
 
-When you use the default v2 API, the symbol field in both request parameters and response columns is called `symbol`. The legacy v1 API uses `ts_code` instead — but the underlying `{code}.{exchange}` format is identical in both versions. Regardless of which API version you target, you always pass `symbol=` in SDK method calls; the SDK handles the internal renaming automatically.
+When you use the default v2 API, stock codes are called `symbol`. The legacy v1 API uses `ts_code` instead, while the SDK handles that internal mapping automatically.
+
+Eastmoney sector identifiers such as `BK0425.DC` are classification codes, not stock symbols. Pass them as `bk_code=` to `client.concepts()` and `client.concept_members()`. For sector constituents, the constituent stock field keeps its source name: `con_code="000001.SZ"`.
 
 <Note>
   The v2 API returns HTTP **422 Unprocessable Entity** if the symbol you supply cannot be parsed — for example, if you omit the exchange suffix or use an unsupported suffix. Check that your code follows the `{code}.{exchange}` format exactly before retrying.
@@ -38,7 +44,7 @@ When you use the default v2 API, the symbol field in both request parameters and
 
 ## Looking Up Valid Symbols
 
-If you are unsure which symbol to use for a particular stock, call `client.stock_list()`. It returns a `pd.DataFrame` containing every currently listed A-share along with its name, exchange, and industry classification. You can paginate through the full universe using the standard `limit` and `offset` parameters.
+If you are unsure which symbol to use, call `client.stock_list()` for mainland shares or `client.hk_stock_list()` for Hong Kong securities.
 
 ```python
 from asharehub import AShareHub

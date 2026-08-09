@@ -14,8 +14,26 @@
 
 ## Terminology
 
-{/* Add product-specific terms and preferred usage */}
-{/* Example: Use "workspace" not "project", "member" not "user" */}
+### Eastmoney sector code naming invariant
+
+Treat this as a stable, non-negotiable public contract.
+
+- An Eastmoney sector code such as `BK0949.DC` is always named `bk_code`.
+- Never accept or return a `BKxxxx.DC` value under `symbol`.
+- In Eastmoney sector-constituent APIs, keep the constituent stock field named
+  `con_code`, such as `000001.SZ`; do not rename it to `symbol` or
+  `con_symbol`.
+- Do not introduce `board_code` or `sector_code` as aliases for `bk_code`.
+- Document the V2/SDK/MCP contract as `concepts(bk_code=...)` and
+  `concept_members(bk_code=..., con_code=...)`.
+- Tushare/RDS/V1 retain source-native `ts_code` and `con_code`. At the public
+  boundary, translate only sector `ts_code` to `bk_code`; keep `con_code`
+  unchanged.
+- `con_symbol` may remain in unrelated index/ETF constituent contracts, but
+  must not be used for Eastmoney sector constituents.
+
+Any change to this contract must update API validation, OpenAPI output, SDK,
+MCP, documentation, skills, smoke tests, and unit tests together.
 
 ## Style preferences
 

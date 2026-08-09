@@ -84,6 +84,14 @@
             ]
           },
           {
+            "group": "Hong Kong Stocks",
+            "pages": [
+              "api/hk-stocks",
+              "api/hk-daily",
+              "api/hk-trade-calendar"
+            ]
+          },
+          {
             "group": "Financials",
             "pages": [
               "api/financial-indicators",

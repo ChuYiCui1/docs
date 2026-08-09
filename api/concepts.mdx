@@ -8,46 +8,48 @@ description: "Browse concept and theme sector indices (概念板块) with daily 
 
 ```python
 df = client.concepts(
-    symbol="TS2",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=100,
-    offset=0,
+    bk_code="BK0425.DC",
+    start_date="20250101",
+    end_date="20250331",
 )
 ```
 
 ## Parameters
 
-<ParamField query="symbol" type="str" optional>
-  Concept index code, e.g. `"TS2"`. Omit to retrieve all concept indices for the specified date range.
+<ParamField query="bk_code" type="str" optional>
+  Eastmoney sector code, e.g. `"BK0425.DC"`. Omit to retrieve all concept sectors for the specified date range.
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+  Start of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Inclusive.
+  End of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
+<ParamField query="trade_date" type="str" optional>
+  A single trading date in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="name" type="str" optional>
+  Sector name, such as `人形机器人`.
+</ParamField>
+
+<ParamField query="idx_type" type="str" optional>
+  Sector category: `概念板块`, `行业板块`, or `地域板块`. The v2 concepts endpoint defaults to `概念板块`.
 </ParamField>
 
 ## Response Fields
 
 Each row maps to the `ConceptIndex` model and represents one concept index on one trading day.
 
-<ResponseField name="ts_code" type="str">
-  Concept index code, e.g. `"TS2"`.
+<ResponseField name="bk_code" type="str">
+  Eastmoney sector code, e.g. `"BK0425.DC"`.
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date in `YYYY-MM-DD` format.
+  Trading date in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="name" type="str">
@@ -103,26 +105,23 @@ client = AShareHub(api_key="ash_...")
 
 # Top-performing concept indices on a specific date
 df_all = client.concepts(
-    start_date="2024-03-15",
-    end_date="2024-03-15",
-    limit=200,
+    trade_date="20250314",
 )
 top_themes = df_all.nlargest(10, "pct_change")[
-    ["ts_code", "name", "pct_change", "leading", "leading_pct", "up_num", "down_num"]
+    ["bk_code", "name", "pct_change", "leading", "leading_pct", "up_num", "down_num"]
 ]
 print(top_themes)
 
 # Historical performance of the AI concept index
 df_ai = client.concepts(
-    symbol="TS2",
-    start_date="2024-01-01",
-    end_date="2024-06-30",
-    limit=200,
+    bk_code="BK0425.DC",
+    start_date="20250101",
+    end_date="20250630",
 )
 print(df_ai[["trade_date", "name", "pct_change", "leading", "turnover_rate"]])
 
 # Get constituent stocks of a concept index
-members = client.concept_members(con_symbol="TS2", limit=100)
+members = client.concept_members(bk_code="BK0425.DC", con_code="000001.SZ")
 print(members)
 ```
 

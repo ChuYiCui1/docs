@@ -1,0 +1,47 @@
+---
+title: "hk_daily — Hong Kong Daily Prices"
+sidebarTitle: "HK Daily"
+description: "Retrieve raw daily OHLC, price changes, share volume, and HKD turnover for Hong Kong-listed securities."
+---
+
+`hk_daily()` returns unadjusted end-of-day bars for Hong Kong securities.
+
+```python
+daily = client.hk_daily(
+    symbol="00700.HK",
+    start_date="20260101",
+    end_date="20260807",
+)
+```
+
+REST endpoint: `GET /v2/hk/daily`
+
+## Parameters
+
+<ParamField query="symbol" type="str" optional>
+  Five-digit Hong Kong symbol with `.HK`, for example `00700.HK`.
+</ParamField>
+
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
+</ParamField>
+
+<ParamField query="start_date" type="str" optional>
+  Inclusive start date in `YYYYMMDD` format.
+</ParamField>
+
+<ParamField query="end_date" type="str" optional>
+  Inclusive end date in `YYYYMMDD` format.
+</ParamField>
+
+## Response fields and units
+
+Each row includes `symbol`, `trade_date`, `open`, `high`, `low`, `close`, `pre_close`, `change`, `pct_chg`, `vol`, and `amount`.
+
+- Price fields and `amount` are denominated in HKD.
+- `vol` is the number of shares, not board lots.
+- `pct_chg` is a percentage value; `2.5` means +2.5%.
+
+<Warning>
+  These bars are raw and unadjusted. AShareHub does not currently expose Hong Kong adjustment factors because the production Tushare subscription does not include `hk_adjfactor`. Do not apply the A-share adjustment-factor endpoint to `.HK` symbols.
+</Warning>
