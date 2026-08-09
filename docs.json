@@ -87,14 +87,6 @@
             ]
           },
           {
-            "group": "Hong Kong Stocks",
-            "pages": [
-              "api/hk-stocks",
-              "api/hk-daily",
-              "api/hk-trade-calendar"
-            ]
-          },
-          {
             "group": "ETFs",
             "pages": [
               "api/etf-basic",

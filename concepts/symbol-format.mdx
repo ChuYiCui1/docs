@@ -44,7 +44,7 @@ Eastmoney sector identifiers such as `BK0425.DC` also remain public `symbol` val
 
 ## Looking Up Valid Symbols
 
-If you are unsure which symbol to use, call `client.stock_list()` for mainland shares or `client.hk_stock_list()` for Hong Kong securities.
+If you are unsure which mainland symbol to use, call `client.stock_list()`. Hong Kong symbols returned by `client.southbound_holdings()` retain their `.HK` suffix.
 
 ```python
 from asharehub import AShareHub
