@@ -102,3 +102,13 @@ print(merged[["trade_date", "close", "close_hfq", "close_qfq"]].head(10))
 <Warning>
   Pre-computed `_qfq` fields are snapshots anchored to the latest trading day available when the source refreshed that record. Calculate from raw daily prices and `adj_factor` when you need a historical anchor or strict reproducibility. Recompute cached forward-adjusted series after a new corporate action or factor correction.
 </Warning>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/adj-factor`
+- SDK: `client.adj_factor(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_adj_factor(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `adj_factor`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

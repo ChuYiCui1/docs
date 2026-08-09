@@ -185,3 +185,13 @@ print(df_pro.columns.tolist())
 <Warning>
   The `*_qfq` fields are source-precomputed snapshots anchored to the latest trading day available when each record was last refreshed. Use raw prices with [`adj_factor`](/api/adj-factor) when you need a historical anchor or strict reproducibility.
 </Warning>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/technical-factors`
+- SDK: `client.technical_factors(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_technical_factors(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `open_hfq`, `close_hfq`, `high_hfq`, `low_hfq`, `pre_close_hfq`, `open_qfq`, `close_qfq`, `high_qfq`, `low_qfq`, `pre_close_qfq`, `adj_factor`, `macd_dif`, `macd_dea`, `macd`, `kdj_k`, `kdj_d`, `kdj_j`, `rsi_6`, `rsi_12`, `rsi_24`, `boll_upper`, `boll_mid`, `boll_lower`, `cci`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

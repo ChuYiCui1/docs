@@ -91,3 +91,13 @@ df = client.disclosure_date(symbol="000001.SZ")
 <Tip>
   Combine `disclosure_date` with `forecast` to build an earnings calendar: pull the scheduled report dates, then check if a 业绩预告 has already been issued for that period to get an early read on the expected outcome.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/analyst-reports`
+- SDK: `client.analyst_reports(symbol=None, start_date=None, end_date=None)`
+- MCP: `get_analyst_reports(symbol=None, start_date=None, end_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`
+- Response fields: `symbol`, `name`, `report_date`, `report_title`, `report_type`, `classify`, `org_name`, `author_name`, `quarter`, `op_rt`, `op_pr`, `tp`, `np`, `eps`, `pe`, `rd`, `roe`, `ev_ebitda`, `rating`, `max_price`, `min_price`, `imp_dg`, `create_time`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

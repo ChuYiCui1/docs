@@ -194,3 +194,13 @@ print(df[["end_date", "eps", "roe", "roa", "netprofit_margin", "netprofit_yoy"]]
 # Check leverage trend
 print(df[["end_date", "debt_to_assets", "current_ratio", "quick_ratio"]])
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/indicators`
+- SDK: `client.financial_indicators(symbol=None, start_date=None, end_date=None, period=None, ann_date=None)`
+- MCP: `get_financial_indicators(symbol=None, start_date=None, end_date=None, period=None, ann_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `period`, `ann_date`
+- Response fields: `symbol`, `ann_date`, `end_date`, `eps`, `dt_eps`, `total_revenue_ps`, `revenue_ps`, `bps`, `ocfps`, `roe`, `roe_waa`, `roe_dt`, `roa`, `gross_margin`, `netprofit_margin`, `grossprofit_margin`, `debt_to_assets`, `current_ratio`, `quick_ratio`, `cash_ratio`, `assets_turn`, `inv_turn`, `ar_turn`, `roic`, `basic_eps_yoy`, `dt_eps_yoy`, `netprofit_yoy`, `dt_netprofit_yoy`, `rd_exp`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

@@ -98,3 +98,13 @@ sina_jan = client.news_flash(
 )
 print(f"Total Sina items in January 2024: {len(sina_jan)}")
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/news/flash`
+- SDK: `client.news_flash(source=None, start_date=None, end_date=None, importance=None)`
+- MCP: `get_news_flash(source=None, start_date=None, end_date=None, importance=None)`
+- Request parameters: `source`, `start_date`, `end_date`, `importance`
+- Response fields: `source`, `publish_time`, `content_cn`, `tags`, `importance`, `url`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

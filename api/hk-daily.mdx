@@ -45,3 +45,13 @@ Each row includes `symbol`, `trade_date`, `open`, `high`, `low`, `close`, `pre_c
 <Warning>
   These bars are raw and unadjusted. AShareHub does not currently expose Hong Kong adjustment factors because the production Tushare subscription does not include `hk_adjfactor`. Do not apply the A-share adjustment-factor endpoint to `.HK` symbols.
 </Warning>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/hk/daily`
+- SDK: `client.hk_daily(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_hk_daily(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `open`, `high`, `low`, `close`, `pre_close`, `change`, `pct_chg`, `vol`, `amount`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

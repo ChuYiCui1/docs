@@ -146,3 +146,13 @@ df_down = client.limit_list(
 <Tip>
   A low `open_times` value combined with a high `limit_amount` and an early `first_time` indicates a strong, sealed limit-up — a common signal watched by A-share momentum traders.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/limit-list`
+- SDK: `client.limit_list(symbol=None, start_date=None, end_date=None, trade_date=None, limit_type=None)`
+- MCP: `get_limit_list(symbol=None, start_date=None, end_date=None, trade_date=None, limit_type=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`, `limit_type`
+- Response fields: `trade_date`, `symbol`, `industry`, `name`, `close`, `pct_chg`, `amount`, `limit_amount`, `float_mv`, `total_mv`, `turnover_ratio`, `fd_amount`, `first_time`, `last_time`, `open_times`, `up_stat`, `limit_times`, `limit`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

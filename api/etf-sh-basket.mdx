@@ -1,0 +1,24 @@
+---
+title: "etf_sh_basket — Etf Sh Basket"
+sidebarTitle: "etf_sh_basket"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_sh_basket."
+---
+
+`etf_sh_basket` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/basket/sh`
+- SDK: `client.etf_sh_basket(symbol=None, con_symbol=None, start_date=None, end_date=None, trade_date=None, exchange=None)`
+- MCP: `get_etf_sh_basket(symbol=None, con_symbol=None, start_date=None, end_date=None, trade_date=None, exchange=None)`
+- Request parameters: `symbol`, `con_symbol`, `start_date`, `end_date`, `trade_date`, `exchange`
+- Response fields: `trade_date`, `symbol`, `con_symbol`, `con_name`, `qty`, `sub_flag`, `cpr`, `rdr`, `sca`, `exchange`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_sh_basket()
+print(df.head())
+```

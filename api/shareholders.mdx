@@ -90,3 +90,13 @@ print(concentrating.sort_values("holder_num").head(20))
 <Tip>
   Combine this endpoint with [`fundamentals`](/api/fundamentals) to normalise shareholder counts by circulating market capitalisation and estimate the average position size per shareholder.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/shareholders`
+- SDK: `client.shareholders(symbol=None, start_date=None, end_date=None, enddate=None, ann_date=None)`
+- MCP: `get_shareholders(symbol=None, start_date=None, end_date=None, enddate=None, ann_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `enddate`, `ann_date`
+- Response fields: `symbol`, `ann_date`, `end_date`, `holder_num`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

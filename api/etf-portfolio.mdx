@@ -1,0 +1,24 @@
+---
+title: "etf_portfolio — Etf Portfolio"
+sidebarTitle: "etf_portfolio"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_portfolio."
+---
+
+`etf_portfolio` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/portfolio`
+- SDK: `client.etf_portfolio(symbol=None, con_symbol=None, start_date=None, end_date=None, period=None, ann_date=None)`
+- MCP: `get_etf_portfolio(symbol=None, con_symbol=None, start_date=None, end_date=None, period=None, ann_date=None)`
+- Request parameters: `symbol`, `con_symbol`, `start_date`, `end_date`, `period`, `ann_date`
+- Response fields: `symbol`, `ann_date`, `end_date`, `con_symbol`, `mkv`, `amount`, `stk_mkv_ratio`, `stk_float_ratio`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_portfolio()
+print(df.head())
+```

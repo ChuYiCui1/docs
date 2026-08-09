@@ -1,0 +1,24 @@
+---
+title: "etf_share_size — Etf Share Size"
+sidebarTitle: "etf_share_size"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_share_size."
+---
+
+`etf_share_size` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/share-size`
+- SDK: `client.etf_share_size(symbol=None, start_date=None, end_date=None, trade_date=None, exchange=None)`
+- MCP: `get_etf_share_size(symbol=None, start_date=None, end_date=None, trade_date=None, exchange=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`, `exchange`
+- Response fields: `trade_date`, `symbol`, `etf_name`, `total_share`, `total_size`, `nav`, `close`, `exchange`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_share_size()
+print(df.head())
+```

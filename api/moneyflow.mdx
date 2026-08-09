@@ -147,3 +147,13 @@ df["inst_net"] = (
 
 print(df[["trade_date", "net_mf_amount", "inst_net"]])
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/flows/moneyflow`
+- SDK: `client.moneyflow(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_moneyflow(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `buy_sm_vol`, `buy_sm_amount`, `sell_sm_vol`, `sell_sm_amount`, `buy_md_vol`, `buy_md_amount`, `sell_md_vol`, `sell_md_amount`, `buy_lg_vol`, `buy_lg_amount`, `sell_lg_vol`, `sell_lg_amount`, `buy_elg_vol`, `buy_elg_amount`, `sell_elg_vol`, `sell_elg_amount`, `net_mf_vol`, `net_mf_amount`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

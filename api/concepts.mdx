@@ -132,3 +132,13 @@ print(members)
 <Tip>
   Sort by `up_num / (up_num + down_num)` to compute a breadth ratio for each concept. A high breadth ratio (most members rising) signals a broad, sector-wide move rather than one driven by a single leading stock.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/concepts`
+- SDK: `client.concepts(symbol=None, start_date=None, end_date=None, trade_date=None, name=None, idx_type=None)`
+- MCP: `get_concepts(symbol=None, start_date=None, end_date=None, trade_date=None, name=None, idx_type=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`, `name`, `idx_type`
+- Response fields: `symbol`, `trade_date`, `name`, `leading`, `leading_code`, `pct_change`, `leading_pct`, `total_mv`, `turnover_rate`, `up_num`, `down_num`, `idx_type`, `level`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

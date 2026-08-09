@@ -1,0 +1,24 @@
+---
+title: "etf_daily — Etf Daily"
+sidebarTitle: "etf_daily"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_daily."
+---
+
+`etf_daily` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/daily`
+- SDK: `client.etf_daily(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_etf_daily(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `pre_close`, `open`, `high`, `low`, `close`, `change`, `pct_chg`, `vol`, `amount`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_daily()
+print(df.head())
+```

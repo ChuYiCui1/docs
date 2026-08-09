@@ -100,3 +100,13 @@ print(top_gainers)
 <Tip>
   For the lowest latency, request only the symbols you need using a comma-separated `symbol` string rather than paging through all stocks.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/realtime`
+- SDK: `client.realtime(symbol=None)`
+- MCP: `get_realtime(symbol=None)`
+- Request parameters: `symbol`
+- Response fields: `symbol`, `name`, `price`, `open`, `high`, `low`, `pre_close`, `pct_chg`, `volume`, `amount`, `trade_time`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

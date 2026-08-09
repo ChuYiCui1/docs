@@ -64,14 +64,17 @@
               "api/fundamentals",
               "api/realtime",
               "api/technical-factors",
+              "api/technical-factors-pro",
               "api/adj-factor",
               "api/limit-list",
               "api/margin",
               "api/block-trade",
               "api/top-list",
+              "api/top-inst",
               "api/shareholders",
               "api/holder-trade",
-              "api/concepts"
+              "api/concepts",
+              "api/concept-members"
             ]
           },
           {
@@ -92,6 +95,20 @@
             ]
           },
           {
+            "group": "ETFs",
+            "pages": [
+              "api/etf-basic",
+              "api/etf-indices",
+              "api/etf-daily",
+              "api/etf-adj-factor",
+              "api/etf-share-size",
+              "api/etf-nav",
+              "api/etf-portfolio",
+              "api/etf-sh-basket",
+              "api/etf-sz-basket"
+            ]
+          },
+          {
             "group": "Financials",
             "pages": [
               "api/financial-indicators",
@@ -99,8 +116,12 @@
               "api/balance-sheet",
               "api/cash-flow",
               "api/forecast",
+              "api/express",
               "api/dividend",
-              "api/analyst-reports"
+              "api/analyst-reports",
+              "api/audit",
+              "api/main-business",
+              "api/disclosure-date"
             ]
           },
           {

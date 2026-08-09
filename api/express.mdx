@@ -1,0 +1,24 @@
+---
+title: "express — Express"
+sidebarTitle: "express"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for express."
+---
+
+`express` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/express`
+- SDK: `client.express(symbol=None, start_date=None, end_date=None, period=None)`
+- MCP: `get_express(symbol=None, start_date=None, end_date=None, period=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `period`
+- Response fields: `symbol`, `ann_date`, `end_date`, `revenue`, `operate_profit`, `total_profit`, `n_income`, `total_assets`, `total_hldr_eqy_exc_min_int`, `diluted_eps`, `diluted_roe`, `yoy_net_profit`, `bps`, `perf_summary`, `update_flag`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.express()
+print(df.head())
+```

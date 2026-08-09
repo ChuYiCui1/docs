@@ -1,0 +1,24 @@
+---
+title: "etf_indices — Etf Indices"
+sidebarTitle: "etf_indices"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_indices."
+---
+
+`etf_indices` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/indices`
+- SDK: `client.etf_indices(symbol=None, pub_date=None, base_date=None)`
+- MCP: `get_etf_indices(symbol=None, pub_date=None, base_date=None)`
+- Request parameters: `symbol`, `pub_date`, `base_date`
+- Response fields: `symbol`, `indx_name`, `indx_csname`, `pub_party_name`, `pub_date`, `base_date`, `bp`, `adj_circle`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_indices()
+print(df.head())
+```

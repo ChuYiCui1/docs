@@ -1,0 +1,24 @@
+---
+title: "etf_adj_factor — Etf Adj Factor"
+sidebarTitle: "etf_adj_factor"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_adj_factor."
+---
+
+`etf_adj_factor` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/adj-factor`
+- SDK: `client.etf_adj_factor(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_etf_adj_factor(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `adj_factor`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_adj_factor()
+print(df.head())
+```

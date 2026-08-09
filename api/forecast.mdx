@@ -123,3 +123,13 @@ print(big_growth[["symbol", "ann_date", "type", "p_change_min", "p_change_max", 
 turnarounds = df[df["type"] == "扭亏"]
 print(turnarounds[["symbol", "net_profit_min", "net_profit_max", "last_parent_net"]])
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/forecast`
+- SDK: `client.forecast(symbol=None, start_date=None, end_date=None, period=None, type=None)`
+- MCP: `get_forecast(symbol=None, start_date=None, end_date=None, period=None, type=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `period`, `type`
+- Response fields: `symbol`, `ann_date`, `end_date`, `type`, `p_change_min`, `p_change_max`, `net_profit_min`, `net_profit_max`, `last_parent_net`, `first_ann_date`, `summary`, `change_reason`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

@@ -1,0 +1,24 @@
+---
+title: "main_business — Main Business"
+sidebarTitle: "main_business"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for main_business."
+---
+
+`main_business` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/main-business`
+- SDK: `client.main_business(symbol=None, start_date=None, end_date=None, period=None)`
+- MCP: `get_main_business(symbol=None, start_date=None, end_date=None, period=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `period`
+- Response fields: `symbol`, `end_date`, `bz_item`, `bz_sales`, `bz_profit`, `bz_cost`, `curr_type`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.main_business()
+print(df.head())
+```

@@ -1,0 +1,24 @@
+---
+title: "etf_basic — Etf Basic"
+sidebarTitle: "etf_basic"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_basic."
+---
+
+`etf_basic` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/basic`
+- SDK: `client.etf_basic(symbol=None, index_symbol=None, list_status=None, exchange=None, manager=None, etf_type=None)`
+- MCP: `get_etf_basic(symbol=None, index_symbol=None, list_status=None, exchange=None, manager=None, etf_type=None)`
+- Request parameters: `symbol`, `index_symbol`, `list_status`, `exchange`, `manager`, `etf_type`
+- Response fields: `symbol`, `csname`, `extname`, `cname`, `index_symbol`, `index_name`, `setup_date`, `list_date`, `list_status`, `exchange`, `mgr_name`, `custod_name`, `mgt_fee`, `etf_type`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_basic()
+print(df.head())
+```

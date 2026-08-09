@@ -30,3 +30,13 @@ The response includes `symbol`, `name`, `fullname`, `enname`, `cn_spell`, `marke
 tencent = client.hk_stock_list(symbol="00700.HK")
 print(tencent[["symbol", "name", "trade_unit", "curr_type"]])
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/hk/basic`
+- SDK: `client.hk_stock_list(symbol=None, list_status=None)`
+- MCP: `get_hk_stock_list(symbol=None, list_status=None)`
+- Request parameters: `symbol`, `list_status`
+- Response fields: `symbol`, `name`, `fullname`, `enname`, `cn_spell`, `market`, `list_status`, `list_date`, `delist_date`, `trade_unit`, `isin`, `curr_type`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

@@ -135,3 +135,13 @@ print(low_pe[["symbol", "pe_ttm", "pb", "total_mv"]])
 <Tip>
   Combine `circ_mv` with `turnover_rate_f` to calculate the free-float adjusted daily turnover in absolute CNY terms: `turnover_cny = circ_mv * turnover_rate_f / 100`.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/fundamentals`
+- SDK: `client.fundamentals(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_fundamentals(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `close`, `turnover_rate`, `turnover_rate_f`, `volume_ratio`, `pe`, `pe_ttm`, `pb`, `ps`, `ps_ttm`, `dv_ratio`, `dv_ttm`, `total_share`, `float_share`, `free_share`, `total_mv`, `circ_mv`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

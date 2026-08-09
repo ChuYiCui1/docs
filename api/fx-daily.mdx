@@ -110,3 +110,13 @@ widest = df.nlargest(5, "spread")[["trade_date", "mid_close", "spread"]]
 print("Top 5 widest spread sessions:")
 print(widest)
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/fx/daily`
+- SDK: `client.fx_daily(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_fx_daily(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `symbol`, `trade_date`, `bid_open`, `bid_close`, `bid_high`, `bid_low`, `ask_open`, `ask_close`, `ask_high`, `ask_low`, `tick_qty`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

@@ -1,0 +1,24 @@
+---
+title: "top_inst — Top Inst"
+sidebarTitle: "top_inst"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for top_inst."
+---
+
+`top_inst` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/top-inst`
+- SDK: `client.top_inst(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_top_inst(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `trade_date`, `symbol`, `exalter`, `buy`, `buy_rate`, `sell`, `sell_rate`, `net_buy`, `side`, `reason`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.top_inst()
+print(df.head())
+```

@@ -1,0 +1,24 @@
+---
+title: "etf_nav — Etf Nav"
+sidebarTitle: "etf_nav"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for etf_nav."
+---
+
+`etf_nav` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/etf/nav`
+- SDK: `client.etf_nav(symbol=None, start_date=None, end_date=None, nav_date=None, ann_date=None)`
+- MCP: `get_etf_nav(symbol=None, start_date=None, end_date=None, nav_date=None, ann_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `nav_date`, `ann_date`
+- Response fields: `symbol`, `ann_date`, `nav_date`, `unit_nav`, `accum_nav`, `accum_div`, `net_asset`, `total_netasset`, `adj_nav`, `update_flag`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.etf_nav()
+print(df.head())
+```

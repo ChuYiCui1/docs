@@ -88,3 +88,13 @@ print(sector_counts.head(10))
 single = client.industry_list(symbol="600519.SH")
 print(single[["symbol", "name", "l1_name", "l2_name", "l3_name"]])
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/reference/industries`
+- SDK: `client.industry_list(symbol=None)`
+- MCP: `get_industry_list(symbol=None)`
+- Request parameters: `symbol`
+- Response fields: `symbol`, `name`, `l1_code`, `l1_name`, `l2_code`, `l2_name`, `l3_code`, `l3_name`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

@@ -1,0 +1,24 @@
+---
+title: "disclosure_date — Disclosure Date"
+sidebarTitle: "disclosure_date"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for disclosure_date."
+---
+
+`disclosure_date` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/disclosure-date`
+- SDK: `client.disclosure_date(symbol=None, start_date=None, end_date=None, pre_date=None, actual_date=None)`
+- MCP: `get_disclosure_date(symbol=None, start_date=None, end_date=None, pre_date=None, actual_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `pre_date`, `actual_date`
+- Response fields: `symbol`, `ann_date`, `end_date`, `pre_date`, `actual_date`, `modify_date`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.disclosure_date()
+print(df.head())
+```

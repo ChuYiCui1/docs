@@ -106,3 +106,13 @@ print(df_inst)
 <Tip>
   `l_amount` (net seat buy/sell) covers only the trades by the **top-5 seats** disclosed by the exchange. A positive `l_amount` alongside high `turnover_rate` can indicate concentrated institutional accumulation.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/top-list`
+- SDK: `client.top_list(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_top_list(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `trade_date`, `symbol`, `name`, `close`, `pct_change`, `turnover_rate`, `amount`, `l_sell`, `l_buy`, `l_amount`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

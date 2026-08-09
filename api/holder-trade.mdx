@@ -123,3 +123,13 @@ print(soe_buys[["symbol", "holder_name", "change_vol", "after_ratio"]])
 <Tip>
   Large-scale state-owned shareholder increases (`holder_type = "G"`, `in_de = "IN"`) during market downturns often coincide with government stabilisation actions (国家队入市) and can be a useful macro-level signal.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/holder-trade`
+- SDK: `client.holder_trade(symbol=None, start_date=None, end_date=None, trade_type=None, holder_type=None)`
+- MCP: `get_holder_trade(symbol=None, start_date=None, end_date=None, trade_type=None, holder_type=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_type`, `holder_type`
+- Response fields: `symbol`, `ann_date`, `holder_name`, `holder_type`, `in_de`, `change_vol`, `change_ratio`, `after_share`, `after_ratio`, `avg_price`, `total_share`, `begin_date`, `close_date`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

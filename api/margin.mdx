@@ -115,3 +115,13 @@ print(df[["trade_date", "rzye", "net_rz_flow"]])
 <Tip>
   A rising `rzye` (margin long balance) alongside a rising price suggests leveraged conviction; a rising `rzye` with a falling price may indicate trapped longs and potential forced-liquidation risk.
 </Tip>
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/market/margin`
+- SDK: `client.margin(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- MCP: `get_margin(symbol=None, start_date=None, end_date=None, trade_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `trade_date`
+- Response fields: `trade_date`, `symbol`, `name`, `rzye`, `rqye`, `rzmre`, `rqyl`, `rzche`, `rqchl`, `rqmcl`, `rzrqye`
+<!-- END GENERATED ASHAREHUB CONTRACT -->

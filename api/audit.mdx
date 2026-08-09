@@ -1,0 +1,24 @@
+---
+title: "audit — Audit"
+sidebarTitle: "audit"
+description: "Exact REST, SDK, MCP, request-parameter and response-field contract for audit."
+---
+
+`audit` returns a `pd.DataFrame` through the Python SDK.
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/audit`
+- SDK: `client.audit(symbol=None, start_date=None, end_date=None, period=None, ann_date=None)`
+- MCP: `get_audit(symbol=None, start_date=None, end_date=None, period=None, ann_date=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `period`, `ann_date`
+- Response fields: `symbol`, `ann_date`, `end_date`, `audit_result`, `audit_fees`, `audit_agency`, `audit_sign`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
+
+## Example
+
+```python
+df = client.audit()
+print(df.head())
+```

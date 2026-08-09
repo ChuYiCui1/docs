@@ -195,3 +195,13 @@ annual = df[
 
 print(annual[["end_date", "revenue", "operate_profit", "n_income_attr_p", "basic_eps"]])
 ```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/financials/income`
+- SDK: `client.income(symbol=None, start_date=None, end_date=None, period=None, ann_date=None, f_ann_date=None, report_type=None, comp_type=None)`
+- MCP: `get_income(symbol=None, start_date=None, end_date=None, period=None, ann_date=None, f_ann_date=None, report_type=None, comp_type=None)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `period`, `ann_date`, `f_ann_date`, `report_type`, `comp_type`
+- Response fields: `symbol`, `ann_date`, `f_ann_date`, `end_date`, `report_type`, `comp_type`, `basic_eps`, `diluted_eps`, `total_revenue`, `revenue`, `total_cogs`, `oper_cost`, `sell_exp`, `admin_exp`, `fin_exp`, `rd_exp`, `operate_profit`, `non_oper_income`, `non_oper_exp`, `total_profit`, `income_tax`, `n_income`, `n_income_attr_p`, `ebit`, `ebitda`, `update_flag`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
