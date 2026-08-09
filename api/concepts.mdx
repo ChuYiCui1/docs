@@ -8,7 +8,7 @@ description: "Browse concept and theme sector indices (概念板块) with daily 
 
 ```python
 df = client.concepts(
-    bk_code="BK0425.DC",
+    symbol="BK0425.DC",
     start_date="20250101",
     end_date="20250331",
 )
@@ -16,7 +16,7 @@ df = client.concepts(
 
 ## Parameters
 
-<ParamField query="bk_code" type="str" optional>
+<ParamField query="symbol" type="str" optional>
   Eastmoney sector code, e.g. `"BK0425.DC"`. Omit to retrieve all concept sectors for the specified date range.
 </ParamField>
 
@@ -44,7 +44,7 @@ df = client.concepts(
 
 Each row maps to the `ConceptIndex` model and represents one concept index on one trading day.
 
-<ResponseField name="bk_code" type="str">
+<ResponseField name="symbol" type="str">
   Eastmoney sector code, e.g. `"BK0425.DC"`.
 </ResponseField>
 
@@ -108,20 +108,20 @@ df_all = client.concepts(
     trade_date="20250314",
 )
 top_themes = df_all.nlargest(10, "pct_change")[
-    ["bk_code", "name", "pct_change", "leading", "leading_pct", "up_num", "down_num"]
+    ["symbol", "name", "pct_change", "leading", "leading_pct", "up_num", "down_num"]
 ]
 print(top_themes)
 
 # Historical performance of the AI concept index
 df_ai = client.concepts(
-    bk_code="BK0425.DC",
+    symbol="BK0425.DC",
     start_date="20250101",
     end_date="20250630",
 )
 print(df_ai[["trade_date", "name", "pct_change", "leading", "turnover_rate"]])
 
 # Get constituent stocks of a concept index
-members = client.concept_members(bk_code="BK0425.DC", con_code="000001.SZ")
+members = client.concept_members(symbol="BK0425.DC", con_symbol="000001.SZ")
 print(members)
 ```
 

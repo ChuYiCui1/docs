@@ -34,9 +34,9 @@ The major Chinese benchmark indices are available using the same suffixed format
 
 ## v1 vs v2 Symbol Parameter
 
-When you use the default v2 API, stock codes are called `symbol`. The legacy v1 API uses `ts_code` instead, while the SDK handles that internal mapping automatically.
+When you use the default v2 API, the primary code field in both request parameters and response columns is called `symbol`. The legacy v1 API may use internal names such as `ts_code` or `index_code`, but the SDK handles that mapping automatically.
 
-Eastmoney sector identifiers such as `BK0425.DC` are classification codes, not stock symbols. Pass them as `bk_code=` to `client.concepts()` and `client.concept_members()`. For sector constituents, the constituent stock field keeps its source name: `con_code="000001.SZ"`.
+Eastmoney sector identifiers such as `BK0425.DC` also remain public `symbol` values. For sector constituents, use `symbol="BK0425.DC"` for the parent sector and `con_symbol="000001.SZ"` for the constituent stock.
 
 <Note>
   The v2 API returns HTTP **422 Unprocessable Entity** if the symbol you supply cannot be parsed — for example, if you omit the exchange suffix or use an unsupported suffix. Check that your code follows the `{code}.{exchange}` format exactly before retrying.
