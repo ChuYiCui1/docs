@@ -11,8 +11,10 @@ client.balance_sheet(
     symbol: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 20,
-    offset: int = 0,
+    period: str | None = None,
+    ann_date: str | None = None,
+    report_type: str | None = None,
+    comp_type: str | None = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +25,27 @@ client.balance_sheet(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter rows where the period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+  Filter rows where the period end date (`end_date`) is on or after this value (`YYYYMMDD`).
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter rows where the period end date is on or before this value (`YYYY-MM-DD`).
+  Filter rows where the period end date is on or before this value (`YYYYMMDD`).
 </ParamField>
 
-<ParamField query="limit" type="int" default={20}>
-  Maximum number of rows to return. Defaults to `20`.
+<ParamField query="period" type="str" optional>
+  Exact reporting period in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="offset" type="int" default={0}>
-  Zero-based pagination offset.
+<ParamField query="ann_date" type="str" optional>
+  Exact announcement date in `YYYYMMDD` format.
+</ParamField>
+
+<ParamField query="report_type" type="str" optional>
+  Tushare report-type code.
+</ParamField>
+
+<ParamField query="comp_type" type="str" optional>
+  Tushare company-type code.
 </ParamField>
 
 ## Response Fields
@@ -47,15 +57,15 @@ client.balance_sheet(
 </ResponseField>
 
 <ResponseField name="ann_date" type="date | None">
-  Public announcement date of this filing (`YYYY-MM-DD`).
+  Public announcement date of this filing (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="f_ann_date" type="date | None">
-  Formal filing announcement date (`YYYY-MM-DD`). May differ from `ann_date` for amended reports.
+  Formal filing announcement date (`YYYYMMDD`). May differ from `ann_date` for amended reports.
 </ResponseField>
 
 <ResponseField name="end_date" type="date">
-  Period end date, e.g. `"2023-12-31"` for the annual balance sheet.
+  Period end date, e.g. `"20231231"` for the annual balance sheet.
 </ResponseField>
 
 <ResponseField name="report_type" type="str">
@@ -190,9 +200,8 @@ client = AShareHub(api_key="ash_...")
 # Annual balance sheets for BYD (002594.SZ) — last 5 years
 df = client.balance_sheet(
     symbol="002594.SZ",
-    start_date="2019-01-01",
-    end_date="2023-12-31",
-    limit=20,
+    start_date="20190101",
+    end_date="20231231",
 )
 
 # Latest revision of annual reports

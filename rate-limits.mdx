@@ -75,12 +75,12 @@ df = pd.read_parquet("market_daily_000001.parquet")
 ```python
 # Good — one request for 100 symbols
 symbols = ["000001.SZ", "000002.SZ", "600036.SH"]  # extend up to 200
-df = client.realtime(symbols=symbols)
+df = client.realtime(symbol=",".join(symbols))
 ```
 
 **Avoid unnecessary polling.** Real-time data is valuable only when your use case actually requires it. If you are building a daily analytics job, schedule it to run once per day rather than polling `realtime()` on a tight loop — every call counts against your daily quota.
 
-**Prefer date-range filters over pagination.** Use `start_date`/`end_date` to scope your queries whenever possible. The `limit`/`offset` pagination parameters are useful for exploring large datasets, but repeatedly paginating through records you have already seen wastes quota. A well-targeted date range is almost always more efficient.
+**Use date and semantic filters.** V2 applies fixed server-side row caps and does not accept `limit` or `offset`. Use `start_date`/`end_date`, an exact `trade_date`, `symbol`, or endpoint-specific filters to keep each result bounded. Split very large histories into non-overlapping date windows and cache completed windows locally.
 
 <Tip>
   Use the Free plan while you are building and testing your application. Its 100-request daily limit is plenty for iterating on your code and validating your data pipeline logic. Once you are ready to move to production — or you find yourself waiting for the midnight reset — upgrade to Pro or Business at [asharehub.com/console](https://asharehub.com/console).

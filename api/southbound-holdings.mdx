@@ -11,8 +11,7 @@ client.southbound_holdings(
     symbol: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 100,
-    offset: int = 0,
+    trade_date: str | None = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +22,15 @@ client.southbound_holdings(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Filters rows where `trade_date >= start_date`.
+  Start of the date range in `YYYYMMDD` format. Filters rows where `trade_date >= start_date`.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Filters rows where `trade_date <= end_date`.
+  End of the date range in `YYYYMMDD` format. Filters rows where `trade_date <= end_date`.
 </ParamField>
 
-<ParamField query="limit" type="int" default={100}>
-  Maximum number of rows to return. Defaults to `100`.
-</ParamField>
-
-<ParamField query="offset" type="int" default={0}>
-  Zero-based pagination offset. Increment by `limit` to page through large result sets.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -43,7 +38,7 @@ client.southbound_holdings(
 The response mirrors the structure of [`northbound_holdings`](/api/northbound-holdings). The following fields are returned for each row:
 
 <ResponseField name="trade_date" type="date">
-  The date of the holding snapshot (`YYYY-MM-DD`).
+  The date of the holding snapshot (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="symbol" type="str">
@@ -84,9 +79,8 @@ client = AShareHub(api_key="ash_...")
 # Mainland holdings of Tencent via southbound link in Q1 2024
 df = client.southbound_holdings(
     symbol="00700.HK",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=100,
+    start_date="20240101",
+    end_date="20240331",
 )
 
 print(df[["trade_date", "vol", "ratio"]])

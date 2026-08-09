@@ -9,11 +9,9 @@ description: "Fetch the daily list of stocks that hit their limit-up (涨停) or
 ```python
 df = client.limit_list(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
+    start_date="20240101",
+    end_date="20240331",
     limit_type="U",
-    limit=100,
-    offset=0,
 )
 ```
 
@@ -24,11 +22,15 @@ df = client.limit_list(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+  Start of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Inclusive.
+  End of the date range in `YYYYMMDD` format. Inclusive.
+</ParamField>
+
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 <ParamField query="limit_type" type="str" optional>
@@ -36,14 +38,6 @@ df = client.limit_list(
   - `"U"` — limit-up stocks only (涨停)
   - `"D"` — limit-down stocks only (跌停)
   - Omit this parameter to return both directions.
-</ParamField>
-
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
 </ParamField>
 
 ## Response Fields
@@ -55,7 +49,7 @@ Each row maps to the `LimitList` model and represents one stock that hit its pri
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date in `YYYY-MM-DD` format.
+  Trading date in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="industry" type="str">
@@ -131,10 +125,9 @@ client = AShareHub(api_key="ash_...")
 
 # All limit-up stocks on a specific date
 df_up = client.limit_list(
-    start_date="2024-03-15",
-    end_date="2024-03-15",
+    start_date="20240315",
+    end_date="20240315",
     limit_type="U",
-    limit=200,
 )
 print(df_up[["symbol", "name", "industry", "limit_times", "open_times", "limit_amount"]])
 
@@ -144,10 +137,9 @@ print(strong[["symbol", "name", "limit_times", "up_stat", "first_time"]])
 
 # Limit-down stocks for a date range
 df_down = client.limit_list(
-    start_date="2024-01-01",
-    end_date="2024-01-31",
+    start_date="20240101",
+    end_date="20240131",
     limit_type="D",
-    limit=500,
 )
 ```
 

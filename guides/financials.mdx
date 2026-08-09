@@ -4,7 +4,7 @@ sidebarTitle: "Financials"
 description: "Retrieve income statements, balance sheets, cash flows, earnings forecasts, dividends, and analyst reports for Chinese A-share companies."
 ---
 
-AShareHub exposes the full suite of financial disclosure data for every A-share listed company — from standardised income statements and balance sheets to earnings forecasts, dividend records, analyst ratings, and annual audit opinions. All financial endpoints return `pd.DataFrame` objects keyed by `ts_code` and `end_date`, making it straightforward to build multi-period models or compare companies across a sector.
+AShareHub exposes the full suite of financial disclosure data for every A-share listed company — from standardised income statements and balance sheets to earnings forecasts, dividend records, analyst ratings, and annual audit opinions. Public V2 responses use `symbol` for the stock code and `end_date` for the reporting period, making it straightforward to build multi-period models or compare companies across a sector.
 
 ## Financial Indicators (Key Ratios)
 
@@ -17,7 +17,7 @@ client = AShareHub(api_key="ash_your_key")
 
 df = client.financial_indicators(
     symbol="000001.SZ",
-    limit=20,
+    period="20241231",
 )
 print(df[["end_date", "eps", "roe", "roa",
           "gross_margin", "netprofit_margin",
@@ -43,7 +43,7 @@ Key columns returned:
 ```python
 df = client.income(
     symbol="600519.SH",
-    limit=20,
+    period="20241231",
 )
 print(df[["end_date", "report_type", "total_revenue", "revenue",
           "operate_profit", "n_income", "basic_eps", "ebit", "ebitda"]])
@@ -68,7 +68,7 @@ Key columns returned:
 ```python
 df = client.balance_sheet(
     symbol="000858.SZ",
-    limit=20,
+    period="20241231",
 )
 print(df[["end_date", "report_type",
           "total_assets", "total_cur_assets",
@@ -91,7 +91,7 @@ Key columns returned:
 ```python
 df = client.cash_flow(
     symbol="000001.SZ",
-    limit=20,
+    period="20241231",
 )
 print(df[["end_date", "report_type",
           "n_cashflow_act",
@@ -115,7 +115,7 @@ Key columns returned:
 ```python
 df = client.forecast(
     symbol="000001.SZ",
-    limit=50,
+    period="20241231",
 )
 print(df[["ann_date", "end_date", "type",
           "p_change_min", "p_change_max",
@@ -137,7 +137,7 @@ print(df[["ann_date", "end_date", "type",
 ```python
 df = client.express(
     symbol="600519.SH",
-    limit=20,
+    period="20241231",
 )
 print(df[["ann_date", "end_date", "revenue",
           "operate_profit", "n_income",
@@ -152,7 +152,6 @@ print(df[["ann_date", "end_date", "revenue",
 ```python
 df = client.dividend(
     symbol="000001.SZ",
-    limit=50,
 )
 print(df[["end_date", "ann_date",
           "stk_div", "cash_div",
@@ -174,8 +173,7 @@ print(df[["end_date", "ann_date",
 ```python
 df = client.analyst_reports(
     symbol="600519.SH",
-    start_date="2024-01-01",
-    limit=100,
+    start_date="20240101",
 )
 print(df.head())
 ```
@@ -189,11 +187,11 @@ Aggregate the consensus EPS or rating columns to build your own consensus estima
 ```python
 df = client.audit(
     symbol="000001.SZ",
-    limit=10,
+    period="20241231",
 )
 print(df.head())
 ```
 
 <Note>
-All financial statement endpoints accept a `report_type` value in the underlying data that distinguishes annual reports (`1`), Q1 reports (`2`), semi-annual reports (`3`), and Q3 reports (`4`). You can filter the returned DataFrame with `df[df["report_type"] == "1"]` to isolate full-year figures. The default `limit` for financial endpoints is **20**, which covers five years of quarterly data — increase it if you need a longer history.
+`income()`, `balance_sheet()`, and `cash_flow()` accept a `report_type` filter. Other financial endpoints can be narrowed with parameters such as `period`, `ann_date`, or endpoint-specific dates. V2 uses fixed server-side row caps rather than client-controlled pagination; split broad histories into non-overlapping reporting-period windows when necessary.
 </Note>

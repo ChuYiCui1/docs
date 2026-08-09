@@ -11,8 +11,7 @@ df = client.chip_distribution(
     symbol: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    limit: int = 100,
-    offset: int = 0,
+    trade_date: Optional[str] = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +22,15 @@ df = client.chip_distribution(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+  Start of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range (inclusive) in `YYYY-MM-DD` format.
+  End of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -47,7 +42,7 @@ The method returns a `pd.DataFrame` where each row represents one stock's chip d
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date for this chip distribution snapshot (`YYYY-MM-DD`).
+  Trading date for this chip distribution snapshot (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="his_low" type="float">
@@ -101,9 +96,8 @@ client = AShareHub(api_key="ash_...")
 # Get the last 60 trading days of chip data for Ping An Bank
 df = client.chip_distribution(
     symbol="000001.SZ",
-    start_date="2024-07-01",
-    end_date="2024-09-30",
-    limit=100,
+    start_date="20240701",
+    end_date="20240930",
 )
 print(df[[
     "trade_date", "cost_50pct", "weight_avg", "winner_rate"

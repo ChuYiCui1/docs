@@ -16,8 +16,7 @@ from asharehub import AShareHub
 client = AShareHub(api_key="ash_your_key")
 
 df = client.moneyflow_hsgt(
-    start_date="2024-01-01",
-    limit=250,
+    start_date="20240101",
 )
 print(df[["trade_date", "north_money", "south_money",
           "hgt_ss", "hgt_sz", "ggt_ss", "ggt_sz"]])
@@ -43,8 +42,7 @@ Key columns returned:
 ```python
 df = client.moneyflow(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    limit=100,
+    start_date="20240101",
 )
 print(df[["trade_date",
           "buy_sm_vol", "buy_sm_amount",
@@ -71,10 +69,9 @@ Corresponding `sell_*` columns follow the same naming pattern. A persistently po
 ```python
 df = client.northbound_holdings(
     symbol="600519.SH",
-    start_date="2024-01-01",
-    limit=250,
+    start_date="20240101",
 )
-print(df[["trade_date", "ts_code", "name", "vol", "ratio", "exchange"]])
+print(df[["trade_date", "symbol", "name", "vol", "ratio", "exchange"]])
 ```
 
 | Column | Description |
@@ -92,8 +89,7 @@ Rising `ratio` over time indicates steady foreign accumulation of the stock.
 ```python
 df = client.southbound_holdings(
     symbol="00700.HK",
-    start_date="2024-01-01",
-    limit=250,
+    start_date="20240101",
 )
 print(df.head())
 ```
@@ -107,8 +103,7 @@ Use this to see which Hong Kong stocks mainland investors are building positions
 ```python
 df = client.chip_distribution(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    limit=100,
+    start_date="20240101",
 )
 print(df[["trade_date", "cost_5pct", "cost_50pct", "cost_95pct",
           "weight_avg", "winner_rate"]])
@@ -120,8 +115,8 @@ A `winner_rate` above 80 % means most holders are sitting on gains — often a p
 Combine `moneyflow_hsgt()` with `index_daily()` to measure the rolling correlation between northbound net flows and CSI 300 daily returns. Days with large northbound inflows have historically preceded positive short-term index returns.
 
 ```python
-flows = client.moneyflow_hsgt(start_date="2024-01-01", limit=250)
-index = client.index_daily(symbol="000300.SH", start_date="2024-01-01", limit=250)
+flows = client.moneyflow_hsgt(start_date="20240101")
+index = client.index_daily(symbol="000300.SH", start_date="20240101")
 import pandas as pd
 merged = flows.merge(index[["trade_date", "pct_chg"]], on="trade_date")
 print(merged[["trade_date", "north_money", "pct_chg"]].head())

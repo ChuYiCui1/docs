@@ -11,8 +11,6 @@ client.analyst_reports(
     symbol: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 100,
-    offset: int = 0,
 ) -> pd.DataFrame
 ```
 
@@ -23,24 +21,22 @@ client.analyst_reports(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Typically filters on the report publication date.
+  Start of the date range in `YYYYMMDD` format. Typically filters on the report publication date.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format.
+  End of the date range in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="limit" type="int" default={100}>
-  Maximum number of rows to return. Defaults to `100`.
-</ParamField>
+## Response Fields
 
-<ParamField query="offset" type="int" default={0}>
-  Zero-based pagination offset.
-</ParamField>
+The V2 response uses the following public columns:
 
-<Note>
-  The response schema for `analyst_reports` is **flexible** and may vary by subscription tier. Always inspect `df.columns` after your first call to see which fields are available on your plan before writing production code that references specific column names.
-</Note>
+- Identity and report metadata: `symbol`, `name`, `report_date`, `report_title`, `report_type`, `classify`, `org_name`, `author_name`, `quarter`.
+- Forecast metrics: `op_rt`, `op_pr`, `tp`, `np`, `eps`, `pe`, `rd`, `roe`, `ev_ebitda`.
+- Rating and price range: `rating`, `max_price`, `min_price`, `imp_dg`, `create_time`.
+
+Calendar-date values such as `report_date` use `YYYYMMDD`. Some metric columns may be null when the source report does not publish that estimate.
 
 ## Example
 
@@ -52,12 +48,11 @@ client = AShareHub(api_key="ash_...")
 # Fetch recent analyst reports for CATL
 df = client.analyst_reports(
     symbol="300750.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=50,
+    start_date="20240101",
+    end_date="20240331",
 )
 
-# Discover available fields for your subscription
+# Inspect the returned estimates
 print("Available columns:", df.columns.tolist())
 print(df.head())
 ```
@@ -72,7 +67,7 @@ Retrieve annual audit opinion (审计意见) records — the external auditor's 
 
 ```python
 # Audit opinions for a stock
-df = client.audit(symbol="000001.SZ", limit=20)
+df = client.audit(symbol="000001.SZ")
 ```
 
 ### Main Business Composition
@@ -81,7 +76,7 @@ Break down a company's revenue by operating segment (主营业务构成). Useful
 
 ```python
 # Main business composition by segment
-df = client.main_business(symbol="000001.SZ", limit=50)
+df = client.main_business(symbol="000001.SZ")
 ```
 
 ### Planned Disclosure Dates
@@ -90,7 +85,7 @@ Retrieve a company's planned (and actual) financial report disclosure schedule (
 
 ```python
 # Planned disclosure dates
-df = client.disclosure_date(symbol="000001.SZ", limit=50)
+df = client.disclosure_date(symbol="000001.SZ")
 ```
 
 <Tip>

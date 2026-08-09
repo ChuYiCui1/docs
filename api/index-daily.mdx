@@ -11,8 +11,7 @@ df = client.index_daily(
     symbol: Optional[str] = "000001.SH",
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    limit: int = 100,
-    offset: int = 0,
+    trade_date: Optional[str] = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +22,15 @@ df = client.index_daily(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+  Start of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range (inclusive) in `YYYY-MM-DD` format.
+  End of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Common Index Codes
@@ -57,7 +52,7 @@ The method returns a `pd.DataFrame` where each row represents one index's data f
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date for this row (`YYYY-MM-DD`).
+  Trading date for this row (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="open" type="float">
@@ -107,17 +102,15 @@ client = AShareHub(api_key="ash_...")
 # Retrieve the last 100 trading days of the CSI 300
 csi300 = client.index_daily(
     symbol="000300.SH",
-    start_date="2024-01-01",
-    end_date="2024-12-31",
-    limit=300,
+    start_date="20240101",
+    end_date="20241231",
 )
 print(csi300[["trade_date", "open", "close", "pct_chg", "vol"]].head(10))
 
 # Compare two indices over the same period
 szse_component = client.index_daily(
     symbol="399001.SZ",
-    start_date="2024-01-01",
-    limit=250,
+    start_date="20240101",
 )
 
 # Calculate cumulative return

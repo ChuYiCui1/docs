@@ -1,83 +1,77 @@
 ---
-title: "Paginating Through Large Result Sets"
-sidebarTitle: "Pagination"
-description: "All AShareHub endpoints support limit and offset pagination. Learn how to page through large datasets and fetch all results in a loop."
+title: "Working with Bounded Result Sets"
+sidebarTitle: "Result Limits"
+description: "AShareHub V2 uses fixed server-side row caps instead of limit/offset pagination. Learn how to narrow queries with symbols, dates, and endpoint-specific filters."
 ---
 
-Every AShareHub method accepts two standard pagination parameters — `limit` and `offset` — that give you precise control over how many rows are returned and where in the result set to start. Because the API enforces a maximum row count per request, you need to page through results in a loop whenever you want to retrieve more data than a single call returns.
+AShareHub V2 does **not** accept `limit` or `offset` parameters. Each endpoint applies a fixed server-side safety cap, and the SDK returns the bounded result as a single `pd.DataFrame`.
 
-## Pagination Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `limit` | `int` | 100 (most endpoints); 20 (financials) | Maximum number of rows returned per request. |
-| `offset` | `int` | 0 | Number of rows to skip before returning results. Increment by `limit` on each page. |
-
-<Note>
-  Most market-data and reference endpoints default to `limit=100`. Financial statement endpoints — `income()`, `balance_sheet()`, `cash_flow()`, and `financial_indicators()` — default to `limit=20` because each row represents a full reporting period and responses are significantly larger.
-</Note>
+This keeps the public contract deterministic and prevents callers from accidentally issuing expensive unbounded scans. To retrieve the data you need, narrow the request with `symbol`, `start_date`, `end_date`, `trade_date`, or the endpoint-specific filters shown on its API reference page.
 
 ## Basic Example
 
-To fetch the most recent 50 trading days of daily price data for Ping An Bank, set `limit=50` and leave `offset` at its default of `0`:
+Use `YYYYMMDD` dates to request a focused window:
 
 ```python
 from asharehub import AShareHub
 
 client = AShareHub(api_key="ash_...")
 
-df = client.market_daily(symbol="000001.SZ", limit=50, offset=0)
+df = client.market_daily(
+    symbol="000001.SZ",
+    start_date="20240101",
+    end_date="20241231",
+)
 print(df[["trade_date", "open", "high", "low", "close", "vol"]])
 ```
 
-## Fetching All Results with a Loop
+For a cross-sectional query, prefer an exact `trade_date`:
 
-When you need the complete history for a symbol, keep requesting pages until the API returns an empty `DataFrame`. The loop below collects every page and concatenates them into a single result:
+```python
+snapshot = client.fundamentals(trade_date="20240603")
+```
+
+## Splitting Large Histories
+
+If a broad request reaches the server cap, split it into non-overlapping date windows rather than using offsets:
 
 ```python
 import pandas as pd
-from asharehub import AShareHub
 
-client = AShareHub(api_key="ash_...")
+windows = [
+    ("20220101", "20221231"),
+    ("20230101", "20231231"),
+    ("20240101", "20241231"),
+]
 
-all_dfs = []
-offset = 0
-page_size = 100
-
-while True:
-    df = client.market_daily(symbol="000001.SZ", limit=page_size, offset=offset)
-    if df.empty:
-        break
-    all_dfs.append(df)
-    offset += page_size
-
-result = pd.concat(all_dfs, ignore_index=True)
-print(f"Fetched {len(result)} rows total")
+frames = [
+    client.market_daily(symbol="600519.SH", start_date=start, end_date=end)
+    for start, end in windows
+]
+history = pd.concat(frames, ignore_index=True).drop_duplicates(
+    subset=["symbol", "trade_date"]
+)
 ```
 
-<Tip>
-  Use the `start_date` and `end_date` parameters alongside `limit` and `offset` to narrow results to a specific time window before you start paging. Scoping your request to, say, a single calendar year can reduce the number of pages from dozens to just one or two, saving both time and API quota.
-</Tip>
-
-## Financial Endpoints
-
-Financial statement endpoints (`income()`, `balance_sheet()`, `cash_flow()`, `financial_indicators()`) follow the same pattern, but remember their lower default limit of `20`. Adjust `page_size` accordingly:
+For financial statements, split by reporting periods or use the exact `period` filter:
 
 ```python
-all_dfs = []
-offset = 0
-page_size = 20
+annual = client.income(symbol="000001.SZ", period="20241231")
+```
 
-while True:
-    df = client.income(symbol="000001.SZ", limit=page_size, offset=offset)
-    if df.empty:
-        break
-    all_dfs.append(df)
-    offset += page_size
+## Reference Endpoints
 
-result = pd.concat(all_dfs, ignore_index=True)
+Bounded reference endpoints such as `stock_list()` and `industry_list()` return their complete current dataset in one call. They support semantic filters instead of pagination:
+
+```python
+listed_sse = client.stock_list(exchange="SSE", list_status="L")
+industries = client.industry_list()
 ```
 
 <Warning>
-  Running a tight fetch-all loop against the API can exhaust your daily request quota very quickly, especially on the free tier (100 requests/day). Always add `start_date` / `end_date` filters to limit the data range, and consider adding a short `time.sleep()` between pages if you are on a paid plan with a high volume of calls. See the [Rate Limits](/rate-limits) page for per-plan quotas and best practices.
+  Raw legacy V1 REST endpoints may still expose `limit` and `offset` for compatibility. Do not pass them to the default V2 SDK methods. All new integrations should use date and semantic filters.
 </Warning>
+
+<Tip>
+  Every date-window request counts against your API quota. Choose the widest window that stays below the endpoint's fixed row cap, cache completed windows locally, and avoid repeatedly downloading unchanged history.
+</Tip>

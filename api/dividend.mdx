@@ -11,8 +11,9 @@ client.dividend(
     symbol: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 50,
-    offset: int = 0,
+    record_date: str | None = None,
+    ex_date: str | None = None,
+    imp_ann_date: str | None = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +24,23 @@ client.dividend(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter rows where the reporting period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+  Filter rows where the announcement date is on or after this value (`YYYYMMDD`).
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter rows where the reporting period end date is on or before this value (`YYYY-MM-DD`).
+  Filter rows where the announcement date is on or before this value (`YYYYMMDD`).
 </ParamField>
 
-<ParamField query="limit" type="int" default={50}>
-  Maximum number of rows to return. Defaults to `50`.
+<ParamField query="record_date" type="str" optional>
+  Exact record date in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="offset" type="int" default={0}>
-  Zero-based pagination offset.
+<ParamField query="ex_date" type="str" optional>
+  Exact ex-dividend date in `YYYYMMDD` format.
+</ParamField>
+
+<ParamField query="imp_ann_date" type="str" optional>
+  Exact implementation announcement date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -45,11 +50,11 @@ client.dividend(
 </ResponseField>
 
 <ResponseField name="end_date" type="date">
-  Reporting period that this distribution relates to, e.g. `"2023-12-31"` for the FY2023 annual dividend.
+  Reporting period that this distribution relates to, e.g. `"20231231"` for the FY2023 annual dividend.
 </ResponseField>
 
 <ResponseField name="ann_date" type="date | None">
-  Date the distribution plan was publicly announced (`YYYY-MM-DD`).
+  Date the distribution plan was publicly announced (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="div_proc" type="str">
@@ -104,7 +109,7 @@ client.dividend(
   **Related endpoint — express (业绩快报):** For a quick earnings summary before the full report is filed, use `client.express()`:
 
   ```python
-  df = client.express(symbol="000001.SZ", limit=20)
+  df = client.express(symbol="000001.SZ")
   ```
 
   The `express` endpoint returns preliminary revenue, profit, EPS, and ROE figures that companies publish ahead of their full financial statements.
@@ -120,9 +125,8 @@ client = AShareHub(api_key="ash_...")
 # Historical dividend records for Kweichow Moutai
 df = client.dividend(
     symbol="600519.SH",
-    start_date="2018-01-01",
-    end_date="2023-12-31",
-    limit=50,
+    start_date="20180101",
+    end_date="20231231",
 )
 
 # Only show implemented distributions with confirmed ex-dates

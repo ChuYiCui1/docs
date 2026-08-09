@@ -11,8 +11,7 @@ df = client.index_weight(
     symbol: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    limit: int = 100,
-    offset: int = 0,
+    trade_date: Optional[str] = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +22,15 @@ df = client.index_weight(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+  Start of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range (inclusive) in `YYYY-MM-DD` format.
+  End of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request. Set to `300` or higher when fetching a full index snapshot (CSI 300 has 300 constituents).
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination.
+<ParamField query="trade_date" type="str" optional>
+  Exact constituent snapshot date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -47,7 +42,7 @@ The method returns a `pd.DataFrame` where each row represents one constituent st
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  The date as of which this constituent weight applies (`YYYY-MM-DD`).
+  The date as of which this constituent weight applies (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="con_symbol" type="str">
@@ -70,14 +65,11 @@ The method returns a `pd.DataFrame` where each row represents one constituent st
 
 ```python
 from asharehub import AShareHub
-import pandas as pd
-
 client = AShareHub(api_key="ash_...")
 
 # Retrieve all 300 CSI 300 constituents for the latest available date
 csi300_weights = client.index_weight(
     symbol="000300.SH",
-    limit=300,
 )
 print(f"Constituents returned: {len(csi300_weights)}")
 print(csi300_weights[["con_symbol", "con_name", "weight"]].head(10))
@@ -89,9 +81,8 @@ print(f"Total weight: {total_weight:.2f}%")
 # Get historical weights for the SZSE Component around a rebalancing date
 szse_hist = client.index_weight(
     symbol="399001.SZ",
-    start_date="2024-06-01",
-    end_date="2024-06-30",
-    limit=500,
+    start_date="20240601",
+    end_date="20240630",
 )
 # Identify the most recent snapshot date
 latest_date = szse_hist["trade_date"].max()

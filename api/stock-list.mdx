@@ -4,28 +4,43 @@ sidebarTitle: "Stock List"
 description: "Retrieve the complete directory of listed Chinese A-share stocks with basic info including name, industry, exchange, market, and listing status."
 ---
 
-The `stock_list()` method returns a paginated directory of every Chinese A-share stock listed on the Shanghai (SSE) and Shenzhen (SZSE) exchanges. Each row includes the stock's identity, exchange membership, market tier, industry classification, and listing status. Because the full universe spans several thousand securities, you should use `limit` and `offset` together to walk through the entire dataset in batches.
+The `stock_list()` method returns the complete directory of Chinese A-share stocks listed on the Shanghai (SSE), Shenzhen (SZSE), and Beijing (BSE) exchanges. Each row includes the stock's identity, exchange membership, market tier, industry classification, and listing status. The V2 endpoint returns the bounded reference dataset in one call and supports directory filters instead of pagination.
 
 ```python
 df = client.stock_list(
     symbol: Optional[str] = None,
-    limit: int = 100,
-    offset: int = 0,
+    name: Optional[str] = None,
+    market: Optional[str] = None,
+    list_status: Optional[str] = None,
+    exchange: Optional[str] = None,
+    is_hs: Optional[str] = None,
 ) -> pd.DataFrame
 ```
 
 ## Parameters
 
 <ParamField query="symbol" type="str" optional>
-  Filter results to a single stock by its suffixed code, e.g. `"000001.SZ"`. Omit to retrieve all stocks (paginated).
+  Filter results to a single stock by its suffixed code, e.g. `"000001.SZ"`. Omit to retrieve the full directory.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request. Increase up to the server's page ceiling to reduce round trips when scanning the full list.
+<ParamField query="name" type="str" optional>
+  Filter by stock name.
 </ParamField>
 
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination. Increment by `limit` on each subsequent call to advance through the dataset.
+<ParamField query="market" type="str" optional>
+  Filter by market segment, such as `主板`, `创业板`, `科创板`, or `北交所`.
+</ParamField>
+
+<ParamField query="list_status" type="str" optional>
+  Filter by listing status: `L`, `D`, or `P`.
+</ParamField>
+
+<ParamField query="exchange" type="str" optional>
+  Filter by exchange, such as `SSE`, `SZSE`, or `BSE`.
+</ParamField>
+
+<ParamField query="is_hs" type="str" optional>
+  Filter by Stock Connect eligibility flag.
 </ParamField>
 
 <Note>
@@ -38,10 +53,6 @@ The method returns a `pd.DataFrame` where each row corresponds to one stock. Fie
 
 <ResponseField name="symbol" type="str">
   Suffixed stock code, e.g. `"600519.SH"` or `"000001.SZ"`.
-</ResponseField>
-
-<ResponseField name="symbol" type="str">
-  Bare numeric ticker without exchange suffix, e.g. `"600519"`.
 </ResponseField>
 
 <ResponseField name="name" type="str">
@@ -85,7 +96,7 @@ The method returns a `pd.DataFrame` where each row corresponds to one stock. Fie
 </ResponseField>
 
 <ResponseField name="list_date" type="date">
-  Date the stock was first listed on its exchange (`YYYY-MM-DD`).
+  Date the stock was first listed on its exchange (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="delist_date" type="date">
@@ -102,22 +113,10 @@ The snippet below demonstrates how to page through the entire A-share universe u
 
 ```python
 from asharehub import AShareHub
-import pandas as pd
-
 client = AShareHub(api_key="ash_...")
 
-all_stocks = []
-offset = 0
-page_size = 500
-
-while True:
-    batch = client.stock_list(limit=page_size, offset=offset)
-    if batch.empty:
-        break
-    all_stocks.append(batch)
-    offset += page_size
-
-universe = pd.concat(all_stocks, ignore_index=True)
+# Retrieve the full stock directory in one call
+universe = client.stock_list()
 print(f"Total stocks retrieved: {len(universe)}")
 
 # Filter to only currently listed stocks on SSE

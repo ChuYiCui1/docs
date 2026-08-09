@@ -9,10 +9,8 @@ description: "Retrieve disclosed shareholder count for Chinese A-share companies
 ```python
 df = client.shareholders(
     symbol="000001.SZ",
-    start_date="2020-01-01",
-    end_date="2024-12-31",
-    limit=100,
-    offset=0,
+    start_date="20200101",
+    end_date="20241231",
 )
 ```
 
@@ -23,19 +21,19 @@ df = client.shareholders(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter by `end_date` (report period end) starting from this date, in `YYYY-MM-DD` format. Inclusive.
+  Filter by report period starting from this date, in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter by `end_date` (report period end) up to this date, in `YYYY-MM-DD` format. Inclusive.
+  Filter by report period up to this date, in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
+<ParamField query="enddate" type="str" optional>
+  Exact shareholder-count statistics date in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="ann_date" type="str" optional>
+  Exact announcement date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -66,7 +64,7 @@ from asharehub import AShareHub
 client = AShareHub(api_key="ash_...")
 
 # Shareholder count history for Ping An Bank
-df = client.shareholders(symbol="000001.SZ", limit=20)
+df = client.shareholders(symbol="000001.SZ")
 print(df[["end_date", "ann_date", "holder_num"]])
 
 # Quarter-over-quarter change in shareholder count
@@ -77,9 +75,8 @@ print(df[["end_date", "holder_num", "holder_change", "holder_pct_change"]])
 
 # Cross-sectional: all disclosures around Q1 2024 report season
 df_all = client.shareholders(
-    start_date="2024-03-31",
-    end_date="2024-04-30",
-    limit=500,
+    start_date="20240331",
+    end_date="20240430",
 )
 # Stocks where shareholder count fell (concentration rising)
 concentrating = df_all[df_all["holder_num"] < df_all["holder_num"].median()]

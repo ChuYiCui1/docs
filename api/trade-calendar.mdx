@@ -12,35 +12,25 @@ df = client.trade_calendar(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     is_open: Optional[int] = None,
-    limit: int = 100,
-    offset: int = 0,
 ) -> pd.DataFrame
 ```
 
 ## Parameters
 
 <ParamField query="exchange" type="str" optional>
-  Exchange to query. Use `"SSE"` for Shanghai or `"SZSE"` for Shenzhen. Omit to retrieve both exchanges simultaneously.
+  Exchange to query. Use `"SSE"` for Shanghai or `"SZSE"` for Shenzhen. Omit to use the V2 default, `"SSE"`.
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range (inclusive) in `YYYY-MM-DD` format, e.g. `"2024-01-01"`.
+  Start of the date range (inclusive) in `YYYYMMDD` format, e.g. `"20240101"`.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range (inclusive) in `YYYY-MM-DD` format, e.g. `"2024-12-31"`.
+  End of the date range (inclusive) in `YYYYMMDD` format, e.g. `"20241231"`.
 </ParamField>
 
 <ParamField query="is_open" type="int" optional>
   Filter rows by market-open status. Pass `1` to return trading days only, or `0` to return non-trading days (weekends and public holidays) only. Omit for all calendar days.
-</ParamField>
-
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request. Set this higher (e.g. `300`) when retrieving a full year of trading days in one call.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination.
 </ParamField>
 
 ## Response Fields
@@ -52,7 +42,7 @@ The method returns a `pd.DataFrame` where each row represents one calendar day. 
 </ResponseField>
 
 <ResponseField name="cal_date" type="date">
-  The calendar date for this row (`YYYY-MM-DD`).
+  The calendar date for this row (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="is_open" type="int">
@@ -75,17 +65,16 @@ client = AShareHub(api_key="ash_...")
 # Fetch all open trading days for SSE in 2024
 df = client.trade_calendar(
     exchange="SSE",
-    start_date="2024-01-01",
-    end_date="2024-12-31",
+    start_date="20240101",
+    end_date="20241231",
     is_open=1,
-    limit=300,
 )
 trading_days = df["cal_date"].tolist()
 print(f"SSE trading days in 2024: {len(trading_days)}")
 print("First 5:", trading_days[:5])
 
 # Find the previous trading day for a given date
-holiday = "2024-10-01"   # National Day — market closed
+holiday = "20241001"   # National Day — market closed
 row = client.trade_calendar(
     exchange="SSE",
     start_date=holiday,

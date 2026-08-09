@@ -8,7 +8,7 @@ AShareHub gives you a single, consistent interface for the full range of Chinese
 
 ## Daily Price Data
 
-Use `market_daily()` to pull end-of-day OHLCV bars for any A-share listed on the SSE or SZSE. Narrow the results to a specific window with `start_date` and `end_date`, or page through longer histories with `limit` and `offset`.
+Use `market_daily()` to pull end-of-day OHLCV bars for any A-share listed on the SSE or SZSE. Narrow the results to a specific window with `start_date` and `end_date`, or use an exact `trade_date` for a market snapshot.
 
 ```python
 from asharehub import AShareHub
@@ -17,8 +17,8 @@ client = AShareHub(api_key="ash_your_key")
 
 df = client.market_daily(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-12-31",
+    start_date="20240101",
+    end_date="20241231",
 )
 print(df[["trade_date", "open", "high", "low", "close", "pre_close",
           "change", "pct_chg", "vol", "amount"]])
@@ -28,7 +28,7 @@ Key columns returned:
 
 | Column | Description |
 |--------|-------------|
-| `trade_date` | Trading date (`YYYY-MM-DD`) |
+| `trade_date` | Trading date (`YYYYMMDD`) |
 | `open` | Opening price (CNY) |
 | `high` | Intraday high |
 | `low` | Intraday low |
@@ -46,7 +46,7 @@ Key columns returned:
 ```python
 df = client.fundamentals(
     symbol="000001.SZ",
-    start_date="2024-01-01",
+    start_date="20240101",
 )
 print(df[["trade_date", "pe", "pe_ttm", "pb", "ps_ttm",
           "total_mv", "circ_mv", "turnover_rate"]])
@@ -71,8 +71,7 @@ Key columns returned:
 ```python
 df = client.technical_factors(
     symbol="600519.SH",
-    start_date="2024-01-01",
-    limit=250,
+    start_date="20240101",
 )
 print(df[["trade_date", "close_hfq", "macd_dif", "macd_dea", "macd",
           "kdj_k", "kdj_d", "kdj_j",
@@ -103,8 +102,7 @@ When you need to apply the adjustment factor yourself — for example, to back-f
 ```python
 df = client.adj_factor(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    limit=250,
+    start_date="20240101",
 )
 print(df[["trade_date", "adj_factor"]])
 ```
@@ -120,10 +118,9 @@ Multiply unadjusted close prices by `adj_factor` for backward-adjusted prices, o
     ```python
     df = client.limit_list(
         limit_type="U",
-        start_date="2024-06-01",
-        limit=100,
+        start_date="20240601",
     )
-    print(df[["trade_date", "ts_code", "name", "close", "pct_chg",
+    print(df[["trade_date", "symbol", "name", "close", "pct_chg",
               "first_time", "last_time", "open_times", "limit_times"]])
     ```
   </Tab>
@@ -131,10 +128,9 @@ Multiply unadjusted close prices by `adj_factor` for backward-adjusted prices, o
     ```python
     df = client.limit_list(
         limit_type="D",
-        start_date="2024-06-01",
-        limit=100,
+        start_date="20240601",
     )
-    print(df[["trade_date", "ts_code", "name", "close", "pct_chg",
+    print(df[["trade_date", "symbol", "name", "close", "pct_chg",
               "first_time", "last_time", "open_times"]])
     ```
   </Tab>
@@ -149,10 +145,9 @@ Notable columns include `first_time` and `last_time` (the first and last times t
 ```python
 df = client.margin(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    limit=100,
+    start_date="20240101",
 )
-print(df[["trade_date", "ts_code", "name",
+print(df[["trade_date", "symbol", "name",
           "rzye", "rqye", "rzrqye"]])
 ```
 
@@ -170,10 +165,9 @@ print(df[["trade_date", "ts_code", "name",
 ```python
 df = client.block_trade(
     symbol="600519.SH",
-    start_date="2024-01-01",
-    limit=100,
+    start_date="20240101",
 )
-print(df[["trade_date", "ts_code", "price", "vol", "amount",
+print(df[["trade_date", "symbol", "price", "vol", "amount",
           "buyer", "seller"]])
 ```
 
@@ -183,10 +177,9 @@ print(df[["trade_date", "ts_code", "price", "vol", "amount",
 
 ```python
 df = client.top_list(
-    start_date="2024-06-01",
-    limit=100,
+    start_date="20240601",
 )
-print(df[["trade_date", "ts_code", "name", "close",
+print(df[["trade_date", "symbol", "name", "close",
           "pct_change", "turnover_rate", "l_buy", "l_sell"]])
 ```
 
@@ -195,12 +188,11 @@ For the full breakdown of which institutional seats were buying or selling, call
 ```python
 inst = client.top_inst(
     symbol="000001.SZ",
-    start_date="2024-06-01",
-    limit=100,
+    start_date="20240601",
 )
 print(inst)
 ```
 
 <Tip>
-Pass `start_date` and `end_date` to every market-data call to narrow the result set. Tight date windows reduce data transfer, stay well within your daily API quota, and make pagination with `limit` and `offset` more predictable. For full-year histories, set `limit=250` (roughly one trading year) instead of the default 100.
+Pass `start_date` and `end_date` to every market-data call to narrow the result set. V2 uses fixed server-side row caps rather than `limit`/`offset`; split very large histories into non-overlapping date windows when necessary.
 </Tip>

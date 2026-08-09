@@ -9,10 +9,8 @@ description: "Retrieve daily margin trading details including long balance (ËûçË
 ```python
 df = client.margin(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=100,
-    offset=0,
+    start_date="20240101",
+    end_date="20240331",
 )
 ```
 
@@ -23,19 +21,15 @@ df = client.margin(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+  Start of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Inclusive.
+  End of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -43,7 +37,7 @@ df = client.margin(
 Each row maps to the `MarginDetail` model and represents one stock's margin trading summary for one trading day.
 
 <ResponseField name="trade_date" type="date">
-  Trading date in `YYYY-MM-DD` format.
+  Trading date in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="symbol" type="str">
@@ -96,16 +90,15 @@ client = AShareHub(api_key="ash_...")
 # Daily margin balance for CITIC Securities over one quarter
 df = client.margin(
     symbol="600030.SH",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
+    start_date="20240101",
+    end_date="20240331",
 )
 print(df[["trade_date", "rzye", "rqye", "rzmre", "rzrqye"]])
 
 # Stocks with the largest margin long balance on a given date
 df_all = client.margin(
-    start_date="2024-06-03",
-    end_date="2024-06-03",
-    limit=500,
+    start_date="20240603",
+    end_date="20240603",
 )
 top_long = df_all.nlargest(10, "rzye")[["symbol", "name", "rzye", "rzmre", "rzrqye"]]
 print(top_long)

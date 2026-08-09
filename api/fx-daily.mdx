@@ -11,8 +11,7 @@ df = client.fx_daily(
     symbol: Optional[str] = "USDCNH.FXCM",
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    limit: int = 100,
-    offset: int = 0,
+    trade_date: Optional[str] = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +22,15 @@ df = client.fx_daily(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range (inclusive) in `YYYY-MM-DD` format.
+  Start of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range (inclusive) in `YYYY-MM-DD` format.
+  End of the date range (inclusive) in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request. A full calendar year of daily FX data is approximately 260 rows.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -47,7 +42,7 @@ The method returns a `pd.DataFrame` where each row represents one currency pair'
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Date of the FX session (`YYYY-MM-DD`).
+  Date of the FX session (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="bid_open" type="float">
@@ -101,8 +96,7 @@ client = AShareHub(api_key="ash_...")
 # Fetch a full year of USD/CNH daily rates
 df = client.fx_daily(
     symbol="USDCNH.FXCM",
-    start_date="2024-01-01",
-    limit=250,
+    start_date="20240101",
 )
 print(df[["trade_date", "bid_close", "ask_close"]].head())
 

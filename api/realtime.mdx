@@ -4,28 +4,18 @@ sidebarTitle: "realtime"
 description: "Fetch real-time intraday quote snapshots for up to 200 A-share symbols per call. Returns current price, OHLC, pct_chg, volume, and trade timestamp."
 ---
 
-`realtime` returns the latest intraday quote snapshot for one or more Chinese A-share stocks. You can pass a single symbol, a comma-separated basket of up to 200 codes, or omit `symbol` entirely to page through the whole market. Each record includes the current trading price, intraday OHLC, prior-day close, cumulative volume, turnover amount, and the precise timestamp of the most recent trade. This is the primary endpoint for building live watchlists, alert systems, or any application that needs sub-minute price data.
+`realtime` returns the latest intraday quote snapshot for one or more Chinese A-share stocks. You can pass a single symbol, a comma-separated basket of up to 200 codes, or omit `symbol` to request the server-bounded market snapshot. Each record includes the current trading price, intraday OHLC, prior-day close, cumulative volume, turnover amount, and the precise timestamp of the most recent trade. This is the primary endpoint for building live watchlists, alert systems, or any application that needs sub-minute price data.
 
 ```python
 df = client.realtime(
     symbol="000001.SZ",
-    limit=100,
-    offset=0,
 )
 ```
 
 ## Parameters
 
 <ParamField query="symbol" type="str" optional>
-  A single suffixed stock code (e.g. `"000001.SZ"`) or a comma-separated list of up to 200 codes (e.g. `"600519.SH,000858.SZ,601318.SH"`). Omit to retrieve snapshots for all tradable stocks, paged by `limit` and `offset`.
-</ParamField>
-
-<ParamField query="limit" type="int" default="100">
-  Maximum number of snapshots to return per call. Maximum effective value when passing a basket is 200.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip. Useful when paging through the full market without a `symbol` filter.
+  A single suffixed stock code (e.g. `"000001.SZ"`) or a comma-separated list of up to 200 codes (e.g. `"600519.SH,000858.SZ,601318.SH"`).
 </ParamField>
 
 <Note>
@@ -96,18 +86,8 @@ basket = "600519.SH,000858.SZ,601318.SH,000001.SZ"
 df_basket = client.realtime(symbol=basket)
 print(df_basket[["symbol", "name", "price", "pct_chg", "volume"]])
 
-# Page through all tradable stocks
-import pandas as pd
-frames = []
-offset = 0
-while True:
-    chunk = client.realtime(limit=200, offset=offset)
-    if chunk.empty:
-        break
-    frames.append(chunk)
-    offset += 200
-
-market = pd.concat(frames, ignore_index=True)
+# Request the server-bounded market snapshot
+market = client.realtime()
 # Top 10 gainers right now
 top_gainers = market.nlargest(10, "pct_chg")[["symbol", "name", "price", "pct_chg"]]
 print(top_gainers)

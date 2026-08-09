@@ -9,23 +9,13 @@ The `industry_list()` method returns the Shenwan Research Institute (申万研�
 ```python
 df = client.industry_list(
     symbol: Optional[str] = None,
-    limit: int = 100,
-    offset: int = 0,
 ) -> pd.DataFrame
 ```
 
 ## Parameters
 
 <ParamField query="symbol" type="str" optional>
-  Filter to a single stock by its suffixed code, e.g. `"600519.SH"`. Omit to retrieve classifications for all stocks (paginated).
-</ParamField>
-
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination. Increment by `limit` on each call to page through the full dataset.
+  Filter to a single stock by its suffixed code, e.g. `"600519.SH"`. Omit to retrieve all current classifications in one call.
 </ParamField>
 
 <Note>
@@ -78,23 +68,10 @@ The example below fetches the full classification table and groups stocks by the
 
 ```python
 from asharehub import AShareHub
-import pandas as pd
-
 client = AShareHub(api_key="ash_...")
 
-# Page through the full classification table
-all_rows = []
-offset = 0
-page_size = 500
-
-while True:
-    batch = client.industry_list(limit=page_size, offset=offset)
-    if batch.empty:
-        break
-    all_rows.append(batch)
-    offset += page_size
-
-classifications = pd.concat(all_rows, ignore_index=True)
+# Retrieve the full current classification table in one call
+classifications = client.industry_list()
 
 # Count stocks per Level 1 sector
 sector_counts = (

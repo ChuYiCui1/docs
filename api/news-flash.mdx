@@ -12,8 +12,6 @@ df = client.news_flash(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     importance: Optional[int] = None,
-    limit: int = 100,
-    offset: int = 0,
 ) -> pd.DataFrame
 ```
 
@@ -27,23 +25,15 @@ df = client.news_flash(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter news published on or after this date (`YYYY-MM-DD`). Applied against `publish_time`.
+  Filter news published on or after this date (`YYYYMMDD`). Applied against `publish_time`.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter news published on or before this date (`YYYY-MM-DD`). Applied against `publish_time`.
+  Filter news published on or before this date (`YYYYMMDD`). Applied against `publish_time`.
 </ParamField>
 
 <ParamField query="importance" type="int" optional>
   Minimum importance threshold filter. Only returns items where `importance >= ` this value. Higher values correspond to more market-moving or widely flagged stories. Typical values are `0` and `1`.
-</ParamField>
-
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return per request.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Zero-based row offset for pagination.
 </ParamField>
 
 ## Response Fields
@@ -82,20 +72,17 @@ The method returns a `pd.DataFrame` where each row is one news item, ordered new
 
 ```python
 from asharehub import AShareHub
-import pandas as pd
-
 client = AShareHub(api_key="ash_...")
 
 # Get the latest important news from CLS (财联社)
-df = client.news_flash(source="cls", importance=1, limit=20)
+df = client.news_flash(source="cls", importance=1)
 print(df[["publish_time", "importance", "content_cn"]].head())
 
 # Get Jin10 news for a specific date range
 df_jun = client.news_flash(
     source="jin10",
-    start_date="2024-06-01",
-    end_date="2024-06-30",
-    limit=100,
+    start_date="20240601",
+    end_date="20240630",
 )
 print(f"Jin10 items in June 2024: {len(df_jun)}")
 
@@ -103,22 +90,11 @@ print(f"Jin10 items in June 2024: {len(df_jun)}")
 fed_news = df_jun[df_jun["tags"].str.contains("美联储", na=False)]
 print(fed_news[["publish_time", "tags", "content_cn"]].head(5))
 
-# Page through a large date range using offset
-all_items = []
-offset = 0
-while True:
-    batch = client.news_flash(
-        source="sina",
-        start_date="2024-01-01",
-        end_date="2024-01-31",
-        limit=100,
-        offset=offset,
-    )
-    if batch.empty:
-        break
-    all_items.append(batch)
-    offset += 100
-
-sina_jan = pd.concat(all_items, ignore_index=True)
+# Query a bounded date range; narrow the dates if the server row cap is reached
+sina_jan = client.news_flash(
+    source="sina",
+    start_date="20240101",
+    end_date="20240131",
+)
 print(f"Total Sina items in January 2024: {len(sina_jan)}")
 ```

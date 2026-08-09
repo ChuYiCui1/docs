@@ -11,8 +11,11 @@ client.income(
     symbol: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 20,
-    offset: int = 0,
+    period: str | None = None,
+    ann_date: str | None = None,
+    f_ann_date: str | None = None,
+    report_type: str | None = None,
+    comp_type: str | None = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +26,31 @@ client.income(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter rows where the reporting period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+  Filter rows where the reporting period end date (`end_date`) is on or after this value (`YYYYMMDD`).
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter rows where the reporting period end date is on or before this value (`YYYY-MM-DD`).
+  Filter rows where the reporting period end date is on or before this value (`YYYYMMDD`).
 </ParamField>
 
-<ParamField query="limit" type="int" default={20}>
-  Maximum number of rows to return. Defaults to `20`.
+<ParamField query="period" type="str" optional>
+  Exact reporting period in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="offset" type="int" default={0}>
-  Zero-based pagination offset.
+<ParamField query="ann_date" type="str" optional>
+  Exact announcement date in `YYYYMMDD` format.
+</ParamField>
+
+<ParamField query="f_ann_date" type="str" optional>
+  Exact formal announcement date in `YYYYMMDD` format.
+</ParamField>
+
+<ParamField query="report_type" type="str" optional>
+  Tushare report-type code.
+</ParamField>
+
+<ParamField query="comp_type" type="str" optional>
+  Tushare company-type code.
 </ParamField>
 
 ## Response Fields
@@ -47,15 +62,15 @@ client.income(
 </ResponseField>
 
 <ResponseField name="ann_date" type="date | None">
-  Date the report was publicly announced (`YYYY-MM-DD`).
+  Date the report was publicly announced (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="f_ann_date" type="date | None">
-  Date of the formal/official announcement filing (`YYYY-MM-DD`). May differ from `ann_date` for amended filings.
+  Date of the formal/official announcement filing (`YYYYMMDD`). May differ from `ann_date` for amended filings.
 </ResponseField>
 
 <ResponseField name="end_date" type="date">
-  Reporting period end date — e.g. `"2023-12-31"` for the full-year report.
+  Reporting period end date — e.g. `"20231231"` for the full-year report.
 </ResponseField>
 
 <ResponseField name="report_type" type="str">
@@ -168,9 +183,8 @@ client = AShareHub(api_key="ash_...")
 # Annual income statements for Kweichow Moutai — last 5 years
 df = client.income(
     symbol="600519.SH",
-    start_date="2019-01-01",
-    end_date="2023-12-31",
-    limit=20,
+    start_date="20190101",
+    end_date="20231231",
 )
 
 # Filter to latest revision of annual reports only

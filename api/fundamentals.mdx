@@ -9,10 +9,8 @@ description: "Retrieve daily valuation metrics including PE ratio, PB ratio, tur
 ```python
 df = client.fundamentals(
     symbol="600519.SH",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=100,
-    offset=0,
+    start_date="20240101",
+    end_date="20240331",
 )
 ```
 
@@ -23,19 +21,15 @@ df = client.fundamentals(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+  Start of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Inclusive.
+  End of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -47,7 +41,7 @@ Each row maps to the `Fundamentals` model and represents one stock on one tradin
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date in `YYYY-MM-DD` format.
+  Trading date in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="close" type="float">
@@ -121,15 +115,14 @@ from asharehub import AShareHub
 
 client = AShareHub(api_key="ash_...")
 
-# Fetch the latest 60 days of valuation data for BYD
-df = client.fundamentals(symbol="002594.SZ", limit=60)
+# Fetch valuation history for BYD
+df = client.fundamentals(symbol="002594.SZ")
 print(df[["trade_date", "pe_ttm", "pb", "total_mv", "circ_mv"]])
 
 # Screen for low-PE stocks on a given date (cross-sectional)
 df_all = client.fundamentals(
-    start_date="2024-06-03",
-    end_date="2024-06-03",
-    limit=500,
+    start_date="20240603",
+    end_date="20240603",
 )
 low_pe = df_all[df_all["pe_ttm"] < 10].sort_values("pe_ttm")
 print(low_pe[["symbol", "pe_ttm", "pb", "total_mv"]])

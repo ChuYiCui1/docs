@@ -9,10 +9,8 @@ description: "Access daily block trade records for Chinese A-shares, including p
 ```python
 df = client.block_trade(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=100,
-    offset=0,
+    start_date="20240101",
+    end_date="20240331",
 )
 ```
 
@@ -23,19 +21,15 @@ df = client.block_trade(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format. Inclusive.
+  Start of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format. Inclusive.
+  End of the date range in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -47,7 +41,7 @@ Each row maps to the `BlockTrade` model and represents a single block trade tran
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Date the block trade was executed, in `YYYY-MM-DD` format.
+  Date the block trade was executed, in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="price" type="float">
@@ -80,16 +74,15 @@ client = AShareHub(api_key="ash_...")
 # Block trades for China Vanke over Q1 2024
 df = client.block_trade(
     symbol="000002.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
+    start_date="20240101",
+    end_date="20240331",
 )
 print(df[["trade_date", "price", "vol", "amount", "buyer", "seller"]])
 
 # Largest block trades across the whole market on a single date
 df_all = client.block_trade(
-    start_date="2024-06-03",
-    end_date="2024-06-03",
-    limit=200,
+    start_date="20240603",
+    end_date="20240603",
 )
 largest = df_all.nlargest(10, "amount")[["symbol", "price", "vol", "amount", "buyer", "seller"]]
 print(largest)

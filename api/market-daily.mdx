@@ -9,10 +9,8 @@ description: "Use market_daily to retrieve daily open, high, low, close, volume,
 ```python
 df = client.market_daily(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=100,
-    offset=0,
+    start_date="20240101",
+    end_date="20240331",
 )
 ```
 
@@ -23,19 +21,15 @@ df = client.market_daily(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Start of the date range in `YYYY-MM-DD` format, e.g. `"2024-01-01"`. Inclusive.
+  Start of the date range in `YYYYMMDD` format, e.g. `"20240101"`. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  End of the date range in `YYYY-MM-DD` format, e.g. `"2024-12-31"`. Inclusive.
+  End of the date range in `YYYYMMDD` format, e.g. `"20241231"`. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return. Increase to page through larger result sets.
-</ParamField>
-
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="trade_date" type="str" optional>
+  Exact trading date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -47,7 +41,7 @@ Each row in the returned `pd.DataFrame` corresponds to one stock on one trading 
 </ResponseField>
 
 <ResponseField name="trade_date" type="date">
-  Trading date in `YYYY-MM-DD` format.
+  Trading date in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="open" type="float">
@@ -93,31 +87,19 @@ from asharehub import AShareHub
 
 client = AShareHub(api_key="ash_...")
 
-# Fetch the last 20 trading days for Ping An Bank
-df = client.market_daily(symbol="000001.SZ", limit=20)
+# Fetch daily history for Ping An Bank
+df = client.market_daily(symbol="000001.SZ", start_date="20240101", end_date="20240331")
 print(df[["trade_date", "open", "high", "low", "close", "vol", "pct_chg"]])
 
 # Fetch all stocks on a specific date
-df_all = client.market_daily(start_date="2024-06-03", end_date="2024-06-03", limit=500)
+df_all = client.market_daily(trade_date="20240603")
 
-# Paginate through a full year of data for Kweichow Moutai
-frames = []
-offset = 0
-while True:
-    chunk = client.market_daily(
-        symbol="600519.SH",
-        start_date="2023-01-01",
-        end_date="2023-12-31",
-        limit=100,
-        offset=offset,
-    )
-    if chunk.empty:
-        break
-    frames.append(chunk)
-    offset += 100
-
-import pandas as pd
-history = pd.concat(frames, ignore_index=True)
+# Retrieve a full year for Kweichow Moutai in one call
+history = client.market_daily(
+    symbol="600519.SH",
+    start_date="20230101",
+    end_date="20231231",
+)
 ```
 
 <Tip>

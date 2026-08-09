@@ -9,10 +9,8 @@ description: "Track buy and sell disclosures by major shareholders (5%+ holders)
 ```python
 df = client.holder_trade(
     symbol="000001.SZ",
-    start_date="2024-01-01",
-    end_date="2024-12-31",
-    limit=100,
-    offset=0,
+    start_date="20240101",
+    end_date="20241231",
 )
 ```
 
@@ -23,19 +21,19 @@ df = client.holder_trade(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter by `ann_date` (announcement date) starting from this date, in `YYYY-MM-DD` format. Inclusive.
+  Filter by `ann_date` (announcement date) starting from this date, in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter by `ann_date` (announcement date) up to this date, in `YYYY-MM-DD` format. Inclusive.
+  Filter by `ann_date` (announcement date) up to this date, in `YYYYMMDD` format. Inclusive.
 </ParamField>
 
-<ParamField query="limit" type="int" default="100">
-  Maximum number of rows to return.
+<ParamField query="trade_type" type="str" optional>
+  Trade direction/type filter accepted by the upstream endpoint.
 </ParamField>
 
-<ParamField query="offset" type="int" default="0">
-  Number of rows to skip before returning results. Use with `limit` to paginate.
+<ParamField query="holder_type" type="str" optional>
+  Shareholder type filter accepted by the upstream endpoint.
 </ParamField>
 
 ## Response Fields
@@ -47,7 +45,7 @@ Each row maps to the `HolderTrade` model and represents one major-shareholder tr
 </ResponseField>
 
 <ResponseField name="ann_date" type="date">
-  Announcement (disclosure) date in `YYYY-MM-DD` format.
+  Announcement (disclosure) date in `YYYYMMDD` format.
 </ResponseField>
 
 <ResponseField name="holder_name" type="str">
@@ -102,14 +100,13 @@ from asharehub import AShareHub
 client = AShareHub(api_key="ash_...")
 
 # All major-shareholder disclosures for Kweichow Moutai
-df = client.holder_trade(symbol="600519.SH", limit=50)
+df = client.holder_trade(symbol="600519.SH")
 print(df[["ann_date", "holder_name", "in_de", "change_vol", "avg_price", "after_ratio"]])
 
 # Market-wide reduction disclosures (减持) in a date range
 df_all = client.holder_trade(
-    start_date="2024-01-01",
-    end_date="2024-03-31",
-    limit=500,
+    start_date="20240101",
+    end_date="20240331",
 )
 reductions = df_all[df_all["in_de"] == "DE"].sort_values("change_vol", ascending=False)
 print(reductions[["symbol", "holder_name", "holder_type", "change_vol", "avg_price"]].head(20))

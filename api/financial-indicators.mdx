@@ -11,8 +11,8 @@ client.financial_indicators(
     symbol: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 20,
-    offset: int = 0,
+    period: str | None = None,
+    ann_date: str | None = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +23,19 @@ client.financial_indicators(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter by reporting period start date (`YYYY-MM-DD`). Matches rows where `end_date >= start_date`.
+  Filter rows whose reporting period (`end_date`) is on or after this `YYYYMMDD` value.
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter by reporting period end date (`YYYY-MM-DD`). Matches rows where `end_date <= end_date`.
+  Filter rows whose reporting period (`end_date`) is on or before this `YYYYMMDD` value.
 </ParamField>
 
-<ParamField query="limit" type="int" default={20}>
-  Maximum number of rows to return. Defaults to `20` (lower than other endpoints due to the column-dense response).
+<ParamField query="period" type="str" optional>
+  Exact reporting period in `YYYYMMDD` format, such as `20241231`.
 </ParamField>
 
-<ParamField query="offset" type="int" default={0}>
-  Zero-based pagination offset.
+<ParamField query="ann_date" type="str" optional>
+  Exact announcement date in `YYYYMMDD` format.
 </ParamField>
 
 ## Response Fields
@@ -47,11 +47,11 @@ client.financial_indicators(
 </ResponseField>
 
 <ResponseField name="ann_date" type="date | None">
-  Date the period's financial report was officially announced (`YYYY-MM-DD`). May be `null` for historical records.
+  Date the period's financial report was officially announced (`YYYYMMDD`). May be `null` for historical records.
 </ResponseField>
 
 <ResponseField name="end_date" type="date">
-  Reporting period end date — e.g. `"2023-12-31"` for the annual report, `"2023-09-30"` for Q3.
+  Reporting period end date — e.g. `"20231231"` for the annual report, `"20230930"` for Q3.
 </ResponseField>
 
 ### Per-Share Metrics
@@ -184,9 +184,8 @@ client = AShareHub(api_key="ash_...")
 # Annual indicators for CATL (300750.SZ) — last 5 years
 df = client.financial_indicators(
     symbol="300750.SZ",
-    start_date="2019-01-01",
-    end_date="2023-12-31",
-    limit=20,
+    start_date="20190101",
+    end_date="20231231",
 )
 
 # Key profitability snapshot

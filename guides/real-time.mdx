@@ -16,7 +16,7 @@ from asharehub import AShareHub
 client = AShareHub(api_key="ash_your_key")
 
 df = client.realtime(symbol="600519.SH")
-print(df[["ts_code", "name", "price", "pct_chg", "volume", "trade_time"]])
+print(df[["symbol", "name", "price", "pct_chg", "volume", "trade_time"]])
 ```
 
 ## Fetching a Basket of Symbols
@@ -25,43 +25,31 @@ Pass a comma-separated string of up to 200 codes to pull multiple quotes in a si
 
 ```python
 df = client.realtime(symbol="600519.SH,000001.SZ,000858.SZ")
-print(df[["ts_code", "price", "pct_chg"]])
+print(df[["symbol", "price", "pct_chg"]])
 ```
 
 Sorting or filtering the resulting DataFrame lets you instantly find the best and worst performers in your watchlist:
 
 ```python
 top_movers = df.nlargest(5, "pct_chg")
-print(top_movers[["ts_code", "name", "price", "pct_chg"]])
+print(top_movers[["symbol", "name", "price", "pct_chg"]])
 ```
 
 ## Scanning the Whole Market
 
-Omit `symbol` entirely and use `limit` and `offset` to paginate through every listed A-share. Concatenate the pages into one DataFrame for a full market snapshot.
+Omit `symbol` to request the server-bounded market snapshot. V2 does not expose client-controlled pagination.
 
 ```python
-import pandas as pd
-
-all_quotes = []
-offset = 0
-
-while True:
-    df = client.realtime(limit=100, offset=offset)
-    if df.empty:
-        break
-    all_quotes.append(df)
-    offset += 100
-
-market = pd.concat(all_quotes, ignore_index=True)
+market = client.realtime()
 print(f"Total stocks fetched: {len(market)}")
-print(market[["ts_code", "name", "price", "pct_chg"]].head(10))
+print(market[["symbol", "name", "price", "pct_chg"]].head(10))
 ```
 
 ## Response Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `ts_code` | `str` | Suffixed stock code (e.g. `600519.SH`) |
+| `symbol` | `str` | Suffixed stock code (e.g. `600519.SH`) |
 | `name` | `str` | Stock short name (Chinese) |
 | `price` | `float` | Latest traded price (CNY) |
 | `open` | `float` | Opening price for the session |
@@ -81,8 +69,8 @@ Both the SSE and SZSE operate **09:30 – 15:00 CST, Monday through Friday**, ex
 ```python
 cal = client.trade_calendar(
     exchange="SSE",
-    start_date="2024-01-01",
-    end_date="2024-01-31",
+    start_date="20240101",
+    end_date="20240131",
 )
 open_days = cal[cal["is_open"] == 1]["cal_date"].tolist()
 print(open_days)
@@ -92,7 +80,7 @@ print(open_days)
 ## Rate Limits
 
 <Warning>
-Polling `realtime()` in a tight loop consumes your daily API quota quickly. On paid plans, poll **at most once every few seconds** per unique symbol or basket. Treat each paginated market-scan loop as multiple requests — a 5 000-stock universe at `limit=100` costs 50 calls per scan. See [Rate Limits](/rate-limits) for per-plan quotas and best-practice guidance.
+Polling `realtime()` in a tight loop consumes your daily API quota quickly. On paid plans, poll **at most once every few seconds** per unique symbol or basket. Batch up to 200 comma-separated symbols into one request when monitoring a watchlist. See [Rate Limits](/rate-limits) for per-plan quotas and best-practice guidance.
 </Warning>
 
 ## Pairing Quotes with News
@@ -104,7 +92,6 @@ Call `news_flash()` in parallel with `realtime()` to surface market-moving headl
 news = client.news_flash(
     source="cls",
     importance=1,
-    limit=20,
 )
 print(news[["publish_time", "content_cn", "tags"]].head())
 ```

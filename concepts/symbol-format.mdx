@@ -51,8 +51,8 @@ from asharehub import AShareHub
 
 client = AShareHub(api_key="ash_...")
 
-# Fetch the first 100 listed A-shares
-df = client.stock_list(limit=100, offset=0)
+# Fetch the current A-share directory
+df = client.stock_list(list_status="L")
 print(df[["symbol", "name", "exchange"]])
 ```
 

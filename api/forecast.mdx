@@ -11,8 +11,8 @@ client.forecast(
     symbol: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 50,
-    offset: int = 0,
+    period: str | None = None,
+    type: str | None = None,
 ) -> pd.DataFrame
 ```
 
@@ -23,19 +23,19 @@ client.forecast(
 </ParamField>
 
 <ParamField query="start_date" type="str" optional>
-  Filter rows where the reporting period end date (`end_date`) is on or after this value (`YYYY-MM-DD`).
+  Filter rows where the announcement date (`ann_date`) is on or after this value (`YYYYMMDD`).
 </ParamField>
 
 <ParamField query="end_date" type="str" optional>
-  Filter rows where the reporting period end date is on or before this value (`YYYY-MM-DD`).
+  Filter rows where the announcement date is on or before this value (`YYYYMMDD`).
 </ParamField>
 
-<ParamField query="limit" type="int" default={50}>
-  Maximum number of rows to return. Defaults to `50`.
+<ParamField query="period" type="str" optional>
+  Exact reporting period in `YYYYMMDD` format.
 </ParamField>
 
-<ParamField query="offset" type="int" default={0}>
-  Zero-based pagination offset.
+<ParamField query="type" type="str" optional>
+  Forecast category, such as `预增`, `预减`, or `扭亏`.
 </ParamField>
 
 ## Response Fields
@@ -45,11 +45,11 @@ client.forecast(
 </ResponseField>
 
 <ResponseField name="ann_date" type="date">
-  Date this forecast was publicly announced (`YYYY-MM-DD`).
+  Date this forecast was publicly announced (`YYYYMMDD`).
 </ResponseField>
 
 <ResponseField name="end_date" type="date">
-  Reporting period this forecast covers, e.g. `"2023-12-31"` for the FY2023 annual forecast.
+  Reporting period this forecast covers, e.g. `"20231231"` for the FY2023 annual forecast.
 </ResponseField>
 
 <ResponseField name="first_ann_date" type="date | None">
@@ -111,9 +111,8 @@ client = AShareHub(api_key="ash_...")
 
 # All FY2023 forecasts announced in January 2024
 df = client.forecast(
-    start_date="2023-01-01",
-    end_date="2023-12-31",
-    limit=50,
+    start_date="20230101",
+    end_date="20231231",
 )
 
 # Companies expecting >100% profit growth
