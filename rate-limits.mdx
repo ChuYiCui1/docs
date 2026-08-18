@@ -51,7 +51,7 @@ Applying a few simple patterns lets you accomplish more with fewer API requests,
 
 ```python
 # Good — only fetches the data you need
-df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01", end_date="2024-03-31")
+df = client.market_daily(symbol="000001.SZ", start_date="20240101", end_date="20240331")
 
 # Avoid — returns the full available history in one call when you may only need recent data
 df = client.market_daily(symbol="000001.SZ")

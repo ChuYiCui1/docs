@@ -61,7 +61,7 @@ AShareHub gives you instant access to Chinese A-Share market data through a clea
     from asharehub import AShareHub
 
     client = AShareHub(api_key="ash_your_key_here")
-    df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01", end_date="2024-12-31")
+    df = client.market_daily(symbol="000001.SZ", start_date="20240101", end_date="20241231")
     print(df[["trade_date", "open", "high", "low", "close", "vol"]])
     client.close()
     ```

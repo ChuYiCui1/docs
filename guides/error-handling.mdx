@@ -13,7 +13,7 @@ AShareHub uses [httpx](https://www.python-httpx.org/) under the hood for all HTT
 | `401` | Invalid or missing API key | Verify the key passed to `AShareHub(api_key=…)`; re-generate at [asharehub.com/console](https://asharehub.com/console) if needed |
 | `403` | Forbidden — feature not on your plan | Upgrade your plan to access this endpoint |
 | `404` | Endpoint not found | Check the method name in the [API reference](/api/market-daily) |
-| `422` | Unprocessable — invalid symbol format | Verify the symbol uses the suffixed format, e.g. `000001.SZ` or `600519.SH` |
+| `422` | Unprocessable — invalid symbol or direct REST date format | Use suffixed symbols such as `000001.SZ` and compact `YYYYMMDD` dates |
 | `429` | Rate limit exceeded | Back off and retry; see [Rate Limits](/rate-limits) for per-plan quotas |
 | `500` | Server error | Retry with exponential backoff; contact support if the error persists |
 
@@ -29,7 +29,7 @@ import time
 client = AShareHub(api_key="ash_your_key")
 
 try:
-    df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+    df = client.market_daily(symbol="000001.SZ", start_date="20240101")
 except httpx.HTTPStatusError as e:
     if e.response.status_code == 401:
         print("Invalid API key — check your key at asharehub.com/console")
@@ -47,8 +47,8 @@ except httpx.HTTPStatusError as e:
 When a valid request returns no matching rows — for example, querying a weekend date for price data — the SDK returns an empty DataFrame rather than raising an exception. Always check `df.empty` before accessing columns.
 
 ```python
-df = client.market_daily(symbol="000001.SZ", start_date="2024-01-06",
-                         end_date="2024-01-07")  # Saturday + Sunday
+df = client.market_daily(symbol="000001.SZ", start_date="20240106",
+                         end_date="20240107")  # Saturday + Sunday
 if df.empty:
     print("No data — the market was likely closed on those dates.")
 else:
@@ -81,7 +81,7 @@ def fetch_with_retry(fn, retries=3, backoff=5):
 
 # Usage
 df = fetch_with_retry(
-    lambda: client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+    lambda: client.market_daily(symbol="000001.SZ", start_date="20240101")
 )
 ```
 
@@ -98,7 +98,7 @@ import httpx
 
 with AShareHub(api_key="ash_your_key") as client:
     try:
-        df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+        df = client.market_daily(symbol="000001.SZ", start_date="20240101")
         print(df.head())
     except httpx.HTTPStatusError as e:
         print(f"API error: {e.response.status_code}")

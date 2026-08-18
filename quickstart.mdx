@@ -60,6 +60,10 @@ AShareHub gets you from zero to a fully populated `pd.DataFrame` of Chinese A-Sh
     ```
 
     Every method in the SDK returns a `pd.DataFrame`, so you can immediately chain pandas operations — filtering, resampling, plotting — without any intermediate parsing.
+
+    <Note>
+      Use compact `YYYYMMDD` dates without separators for v2, such as `20240815`. Both SDK string arguments and direct v2 REST calls use this compact format.
+    </Note>
   </Step>
 
   <Step title="Close the client">
@@ -84,8 +88,8 @@ from asharehub import AShareHub
 with AShareHub(api_key="ash_your_key_here") as client:
     df = client.market_daily(
         symbol="000001.SZ",
-        start_date="2024-01-01",
-        end_date="2024-12-31",
+        start_date="20240101",
+        end_date="20241231",
     )
     print(df.head())
 # HTTP connection is closed here automatically

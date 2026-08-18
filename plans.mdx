@@ -59,7 +59,7 @@ Ready to create your account? Visit the AShareHub console to sign up and generat
 ## Frequently Asked Questions
 
 <Accordion title="What counts as one API request?">
-  One call to any SDK method counts as one API request, regardless of how many rows the response returns. For example, calling `client.market_daily(symbol="000001.SZ", start_date="2020-01-01")` to fetch several years of daily bars still counts as a single request against your daily quota.
+  One call to any SDK method counts as one API request, regardless of how many rows the response returns. For example, calling `client.market_daily(symbol="000001.SZ", start_date="20200101")` to fetch several years of daily bars still counts as a single request against your daily quota.
 </Accordion>
 
 <Accordion title="Do unused requests roll over to the next day?">

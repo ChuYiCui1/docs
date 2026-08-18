@@ -98,7 +98,7 @@ from asharehub import AShareHub
 client = AShareHub(api_key=os.getenv("ASHAREHUB_API_KEY"))
 
 try:
-    df = client.market_daily(symbol="000001.SZ", start_date="2024-01-01")
+    df = client.market_daily(symbol="000001.SZ", start_date="20240101")
     print(df.head())
 except httpx.HTTPStatusError as e:
     status = e.response.status_code
