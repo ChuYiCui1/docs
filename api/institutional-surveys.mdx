@@ -1,0 +1,31 @@
+---
+title: "Institutional research events"
+sidebarTitle: "Institutional research events"
+description: "Paged V2 research data with matching SDK and MCP tools."
+---
+
+Count research events with `institutional_surveys`, not participant rows. Each event has an `event_id` and `participant_count`; the count includes all stored participant records, not unique institutions. `rece_org` selects events with that exact participant institution and does not change the count.
+
+Use `symbol`, `start_date` and `end_date` (YYYYMMDD), or `event_id` to narrow results. Defaults: `limit=100`, `offset=0`; maximum limit 500. Order: research date descending, event id ascending. Increment offset by the number of returned rows until a page has fewer than limit rows. Concurrent source revisions can change offset pages; use narrow date windows and deduplicate by event id. Event ids may change after source transcript revisions.
+
+`content` is null by default and is not loaded from storage. Request `include_content=True, limit=20` or less for full transcripts. A larger limit with content returns 422. Empty results return `[]` (an empty SDK DataFrame). These are V2-only endpoints; SDK `version="v1"` rejects these new methods.
+
+## Example
+
+```python
+events = client.institutional_surveys(start_date="20261101", limit=20)
+if not events.empty:
+    event_id = events.iloc[0]["event_id"]
+    transcript = client.institutional_surveys(event_id=event_id, include_content=True, limit=1)
+    participants = client.survey_participants(event_id=event_id, limit=1000)
+```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/research/institutional-surveys`
+- SDK: `client.institutional_surveys(symbol=None, start_date=None, end_date=None, event_id=None, rece_org=None, include_content=False, limit=100, offset=0)`
+- MCP: `get_institutional_surveys(symbol=None, start_date=None, end_date=None, event_id=None, rece_org=None, include_content=False, limit=100, offset=0)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `event_id`, `rece_org`, `include_content`, `limit`, `offset`
+- Response fields: `event_id`, `symbol`, `name`, `surv_date`, `rece_place`, `rece_mode`, `comp_rece`, `participant_count`, `content`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
