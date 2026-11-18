@@ -1,0 +1,26 @@
+---
+title: "Research participant records"
+sidebarTitle: "Research participant records"
+description: "Paged V2 research data with matching SDK and MCP tools."
+---
+
+Each row represents one stored participant record associated with an event. Multiple rows can belong to the same institution or event. Do not present row counts as research event counts or unique institution counts. Query `institutional_surveys` for event-level counts and transcripts.
+
+Filter by `symbol`, `start_date`, `end_date` (YYYYMMDD), `event_id`, exact `rece_org`, or exact `org_type`. Defaults: `limit=100`, `offset=0`; maximum limit 1000. Order: research date descending, event id ascending, participant id ascending. Increment offset until fewer than limit rows are returned. No transcript is duplicated into participant responses. Use narrow date windows for reproducible paging across source updates. V2 only.
+
+## Example
+
+```python
+participants = client.survey_participants(start_date="20261101", limit=100, offset=0)
+print(participants.head())
+```
+
+<!-- BEGIN GENERATED ASHAREHUB CONTRACT -->
+## Exact public contract
+
+- REST: `GET /v2/research/survey-participants`
+- SDK: `client.survey_participants(symbol=None, start_date=None, end_date=None, event_id=None, rece_org=None, org_type=None, limit=100, offset=0)`
+- MCP: `get_survey_participants(symbol=None, start_date=None, end_date=None, event_id=None, rece_org=None, org_type=None, limit=100, offset=0)`
+- Request parameters: `symbol`, `start_date`, `end_date`, `event_id`, `rece_org`, `org_type`, `limit`, `offset`
+- Response fields: `participant_id`, `event_id`, `symbol`, `surv_date`, `fund_visitors`, `rece_org`, `org_type`
+<!-- END GENERATED ASHAREHUB CONTRACT -->
